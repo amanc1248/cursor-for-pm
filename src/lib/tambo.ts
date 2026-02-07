@@ -19,6 +19,30 @@ import {
   slackMessagePreviewSchema,
 } from "@/components/pm/slack-message-preview";
 import {
+  TaskBreakdown,
+  taskBreakdownSchema,
+} from "@/components/pm/task-breakdown";
+import {
+  CompetitorMatrix,
+  competitorMatrixSchema,
+} from "@/components/pm/competitor-matrix";
+import {
+  StatusReport,
+  statusReportSchema,
+} from "@/components/pm/status-report";
+import {
+  RoadmapTimeline,
+  roadmapTimelineSchema,
+} from "@/components/pm/roadmap-timeline";
+import {
+  MetricsDashboard,
+  metricsDashboardSchema,
+} from "@/components/pm/metrics-dashboard";
+import {
+  MeetingNotes,
+  meetingNotesSchema,
+} from "@/components/pm/meeting-notes";
+import {
   analyzeFeedback,
   analyzeFeedbackSchema,
   analyzeFeedbackOutputSchema,
@@ -34,6 +58,7 @@ import {
   postToSlackOutputSchema,
 } from "@/services/slack";
 import { uploadedFeedbackHelper } from "@/lib/feedback-store";
+import { pmPersonaHelper } from "@/lib/pm-context";
 import type { TamboComponent } from "@tambo-ai/react";
 import { TamboTool } from "@tambo-ai/react";
 
@@ -43,6 +68,7 @@ import { TamboTool } from "@tambo-ai/react";
  */
 export const contextHelpers = {
   uploadedFeedback: uploadedFeedbackHelper,
+  pmPersona: pmPersonaHelper,
 };
 
 /**
@@ -141,5 +167,47 @@ export const components: TamboComponent[] = [
       "Displays a preview of a Slack message that was posted, showing the channel, bot avatar, formatted message, and delivery status. Use this after posting a message to Slack to confirm it was sent.",
     component: SlackMessagePreview,
     propsSchema: slackMessagePreviewSchema,
+  },
+  {
+    name: "TaskBreakdown",
+    description:
+      "Displays a sprint plan or feature breakdown as a list of dev tasks with story points, type (frontend/backend/design/qa), status, and assignee. Shows total points and progress. Use this when a user asks to plan a sprint, break down a feature into tasks, estimate story points, or create a task list for development.",
+    component: TaskBreakdown,
+    propsSchema: taskBreakdownSchema,
+  },
+  {
+    name: "CompetitorMatrix",
+    description:
+      "Displays a competitive analysis matrix comparing features across multiple competitors with full/partial/none/unknown support indicators and key insights. Use this when a user asks to compare products, do competitive analysis, benchmark features, or evaluate alternatives.",
+    component: CompetitorMatrix,
+    propsSchema: competitorMatrixSchema,
+  },
+  {
+    name: "StatusReport",
+    description:
+      "Displays a stakeholder status report with overall status (on-track/at-risk/off-track), highlights, risks, next steps, and key metrics with trends. Use this when a user asks for a status update, exec summary, weekly report, or project health check.",
+    component: StatusReport,
+    propsSchema: statusReportSchema,
+  },
+  {
+    name: "RoadmapTimeline",
+    description:
+      "Displays a product roadmap as a vertical timeline with phases, date ranges, status indicators, and milestone items. Use this when a user asks to plan a roadmap, lay out quarterly milestones, visualize project phases, or create a release plan.",
+    component: RoadmapTimeline,
+    propsSchema: roadmapTimelineSchema,
+  },
+  {
+    name: "MetricsDashboard",
+    description:
+      "Displays a grid of KPI metric cards with big numbers, trend arrows, percentage changes, and target progress bars. Use this when a user asks about KPIs, success metrics, tracking numbers, performance dashboards, or wants to define measurable goals.",
+    component: MetricsDashboard,
+    propsSchema: metricsDashboardSchema,
+  },
+  {
+    name: "MeetingNotes",
+    description:
+      "Displays structured meeting notes with attendees, summary, decisions, and action items with owners and due dates. Use this when a user asks to summarize a meeting, capture action items, document decisions, or write meeting minutes.",
+    component: MeetingNotes,
+    propsSchema: meetingNotesSchema,
   },
 ];
