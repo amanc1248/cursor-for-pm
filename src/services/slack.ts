@@ -30,14 +30,18 @@ export const postToSlackOutputSchema = z.object({
 export async function postToSlack(
   input: z.infer<typeof postToSlackSchema>
 ) {
-  // Simulate API delay
-  await new Promise((r) => setTimeout(r, 600));
+  const response = await fetch("/api/slack", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
 
-  return {
-    messageId: `msg-${Date.now()}`,
-    channel: input.channel,
-    message: input.message,
-    timestamp: new Date().toISOString(),
-    status: "sent",
-  };
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(
+      err.error ?? `Failed to post to Slack (${response.status})`
+    );
+  }
+
+  return response.json();
 }

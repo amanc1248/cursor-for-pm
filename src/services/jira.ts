@@ -4,7 +4,7 @@ export const createJiraTicketSchema = z.object({
   title: z.string().describe("Ticket title/summary"),
   description: z.string().describe("Ticket description with context"),
   type: z
-    .enum(["Story", "Task", "Bug", "Epic"])
+    .enum(["Story", "Task", "Bug", "Epic", "Feature"])
     .describe("Issue type"),
   priority: z
     .enum(["Highest", "High", "Medium", "Low", "Lowest"])
@@ -34,19 +34,18 @@ export const createJiraTicketOutputSchema = z.object({
 export async function createJiraTicket(
   input: z.infer<typeof createJiraTicketSchema>
 ) {
-  // Simulate API delay
-  await new Promise((r) => setTimeout(r, 800));
+  const response = await fetch("/api/jira", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
 
-  const ticketNum = Math.floor(Math.random() * 9000) + 1000;
-  return {
-    ticketId: `PM-${ticketNum}`,
-    title: input.title,
-    description: input.description,
-    type: input.type,
-    priority: input.priority,
-    labels: input.labels ?? [],
-    status: "To Do",
-    createdAt: new Date().toISOString(),
-    url: `https://yourcompany.atlassian.net/browse/PM-${ticketNum}`,
-  };
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(
+      err.error ?? `Failed to create Jira ticket (${response.status})`
+    );
+  }
+
+  return response.json();
 }
