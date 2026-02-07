@@ -6,7 +6,13 @@ import {
   useTamboSuggestions,
   useTamboContextAttachment,
 } from "@tambo-ai/react";
-import { Send, Paperclip, X, FileText, Image as ImageIcon } from "lucide-react";
+import {
+  ArrowUp,
+  Paperclip,
+  X,
+  FileText,
+  Image as ImageIcon,
+} from "lucide-react";
 import { setFeedback } from "@/lib/feedback-store";
 import {
   classifyFile,
@@ -19,21 +25,30 @@ interface StagedFile {
   id: string;
   name: string;
   type: "pdf" | "text" | "image";
-  preview: string; // short preview of content or "Image"
+  preview: string;
 }
 
 export function MessageInput() {
-  const { value, setValue, submit, isPending, error, addImage, addImages, images, removeImage } =
-    useTamboThreadInput();
+  const {
+    value,
+    setValue,
+    submit,
+    isPending,
+    error,
+    addImage,
+    addImages,
+    images,
+    removeImage,
+  } = useTamboThreadInput();
   const { suggestions, accept, isPending: suggestionsPending } =
     useTamboSuggestions({ maxSuggestions: 4 });
-  const { addContextAttachment, clearContextAttachments } =
-    useTamboContextAttachment();
+  const { addContextAttachment } = useTamboContextAttachment();
 
   const [stagedFiles, setStagedFiles] = useState<StagedFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [parseError, setParseError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const processFiles = useCallback(
     async (files: FileList | File[]) => {
@@ -71,10 +86,8 @@ export function MessageInput() {
             continue;
           }
 
-          // Store as feedback if it looks like feedback data
           setFeedback(parsed.content);
 
-          // Add as context attachment so the AI sees it with the next message
           const displayName = parsed.pageCount
             ? `${file.name} (${parsed.pageCount} pages)`
             : file.name;
@@ -108,7 +121,6 @@ export function MessageInput() {
   const removeStagedFile = useCallback(
     (id: string) => {
       setStagedFiles((prev) => prev.filter((f) => f.id !== id));
-      // If it was an image, remove from Tambo's image list too
       const file = stagedFiles.find((f) => f.id === id);
       if (file?.type === "image") {
         const tamboImage = images.find((img) => img.name === file.name);
@@ -118,24 +130,44 @@ export function MessageInput() {
     [stagedFiles, images, removeImage]
   );
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if ((!value.trim() && stagedFiles.length === 0 && images.length === 0) || isPending)
+    if (
+      (!value.trim() && stagedFiles.length === 0 && images.length === 0) ||
+      isPending
+    )
       return;
 
-    // If there are staged text/pdf files and no explicit message, auto-prompt
+    // If staged text files and no message, auto-prompt
     if (!value.trim() && stagedFiles.some((f) => f.type !== "image")) {
-      setValue("I've uploaded customer feedback. Please analyze it and identify the key themes.");
+      setValue(
+        "I've uploaded customer feedback. Please analyze it and identify the key themes."
+      );
     }
 
-    await submit({ streamResponse: true });
+    // Fire submit first so it captures the current value
+    void submit({ streamResponse: true });
 
-    // Clear staged files after submit (context attachments auto-clear)
-    setStagedFiles([]);
-    setParseError(null);
+    // Clear after submit has captured the value
+    requestAnimationFrame(() => {
+      setValue("");
+      setStagedFiles([]);
+      setParseError(null);
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto";
+      }
+    });
   };
 
-  // Drag and drop handlers
+  // Auto-resize textarea
+  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setValue(e.target.value);
+    const el = e.target;
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 120) + "px";
+  };
+
+  // Drag and drop
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -161,31 +193,33 @@ export function MessageInput() {
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files && e.target.files.length > 0) {
         await processFiles(e.target.files);
-        // Reset input so the same file can be selected again
         e.target.value = "";
       }
     },
     [processFiles]
   );
 
+  const canSend =
+    !isPending &&
+    (value.trim() || stagedFiles.length > 0 || images.length > 0);
+
   return (
     <div
-      className="border-t border-slate-800"
+      className="border-t border-white/[0.06]"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
       {/* Suggestions */}
       {suggestions.length > 0 && !suggestionsPending && (
-        <div className="px-4 pt-3">
-          <div className="text-gray-500 text-xs mb-2">Suggested actions</div>
-          <div className="flex flex-wrap gap-2">
+        <div className="px-5 pt-3">
+          <div className="flex flex-wrap gap-1.5">
             {suggestions.map((suggestion) => (
               <button
                 key={suggestion.id}
                 onClick={() => accept({ suggestion, shouldSubmit: true })}
                 disabled={isPending}
-                className="text-xs px-3 py-1.5 rounded-full bg-slate-800/50 border border-slate-700/50 text-gray-400 hover:text-white hover:border-blue-500/50 transition-all disabled:opacity-50"
+                className="text-[12px] px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.06] text-white/50 hover:text-white/80 hover:bg-white/[0.08] hover:border-white/[0.12] transition-all duration-200 disabled:opacity-40"
               >
                 {suggestion.title}
               </button>
@@ -196,32 +230,32 @@ export function MessageInput() {
 
       {/* Drag overlay */}
       {isDragging && (
-        <div className="mx-4 mt-3 p-6 border-2 border-dashed border-blue-500/50 rounded-xl bg-blue-500/10 text-center">
-          <p className="text-blue-400 text-sm font-medium">
-            Drop files here — PDF, CSV, TXT, or images
+        <div className="mx-5 mt-3 p-6 border-2 border-dashed border-indigo-500/40 rounded-2xl bg-indigo-500/[0.05] text-center">
+          <p className="text-indigo-400/80 text-sm font-medium">
+            Drop files here
           </p>
         </div>
       )}
 
-      {/* Staged files preview */}
+      {/* Staged files */}
       {stagedFiles.length > 0 && (
-        <div className="px-4 pt-3 flex flex-wrap gap-2">
+        <div className="px-5 pt-3 flex flex-wrap gap-1.5">
           {stagedFiles.map((file) => (
             <div
               key={file.id}
-              className="flex items-center gap-2 bg-slate-800/80 border border-slate-700/50 rounded-lg px-3 py-1.5 text-xs"
+              className="flex items-center gap-2 bg-white/[0.04] border border-white/[0.06] rounded-lg px-2.5 py-1.5 text-[11px]"
             >
               {file.type === "image" ? (
-                <ImageIcon className="w-3.5 h-3.5 text-purple-400" />
+                <ImageIcon className="w-3 h-3 text-violet-400/70" />
               ) : (
-                <FileText className="w-3.5 h-3.5 text-blue-400" />
+                <FileText className="w-3 h-3 text-indigo-400/70" />
               )}
-              <span className="text-gray-300 max-w-[150px] truncate">
+              <span className="text-white/50 max-w-[120px] truncate">
                 {file.name}
               </span>
               <button
                 onClick={() => removeStagedFile(file.id)}
-                className="text-gray-500 hover:text-gray-300 transition-colors"
+                className="text-white/20 hover:text-white/50 transition-colors"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -230,13 +264,13 @@ export function MessageInput() {
         </div>
       )}
 
-      {/* Staged images from Tambo (shown if added via paste) */}
+      {/* Staged images from paste */}
       {images.length > 0 && stagedFiles.every((f) => f.type !== "image") && (
-        <div className="px-4 pt-3 flex flex-wrap gap-2">
+        <div className="px-5 pt-3 flex flex-wrap gap-2">
           {images.map((img) => (
             <div
               key={img.id}
-              className="relative w-16 h-16 rounded-lg overflow-hidden border border-slate-700/50"
+              className="relative w-14 h-14 rounded-xl overflow-hidden border border-white/[0.06]"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -246,24 +280,39 @@ export function MessageInput() {
               />
               <button
                 onClick={() => removeImage(img.id)}
-                className="absolute top-0.5 right-0.5 bg-black/60 rounded-full p-0.5 text-gray-300 hover:text-white"
+                className="absolute top-0.5 right-0.5 bg-black/70 rounded-full p-0.5 text-white/60 hover:text-white"
               >
-                <X className="w-3 h-3" />
+                <X className="w-2.5 h-2.5" />
               </button>
             </div>
           ))}
         </div>
       )}
 
+      {/* Input area */}
       <div className="p-4">
-        <form onSubmit={handleSubmit} className="relative">
+        <form
+          onSubmit={handleSubmit}
+          className="relative flex items-end gap-2 bg-white/[0.04] border border-white/[0.08] rounded-2xl px-3 py-2 focus-within:border-white/[0.15] transition-colors duration-200"
+        >
+          {/* Attach */}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="p-2 text-white/40 hover:text-white/70 hover:bg-white/[0.06] rounded-xl transition-all duration-200 flex-shrink-0 mb-0.5"
+            title="Attach files (PDF, CSV, TXT, images)"
+          >
+            <Paperclip className="w-[18px] h-[18px]" />
+          </button>
+
+          {/* Textarea */}
           <textarea
+            ref={textareaRef}
             value={value}
-            onChange={(e) => setValue(e.target.value)}
-            placeholder="Ask about feedback, features, or priorities..."
-            disabled={isPending}
-            rows={3}
-            className="w-full bg-slate-800 text-white rounded-xl px-4 py-3 pr-24 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 border border-slate-700 placeholder-gray-500 transition-all"
+            onChange={handleInput}
+            placeholder="Ask anything..."
+            rows={1}
+            className="flex-1 bg-transparent text-white/90 text-[13.5px] resize-none focus:outline-none placeholder:text-white/25 placeholder:italic leading-relaxed py-1.5 max-h-[120px]"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -271,7 +320,6 @@ export function MessageInput() {
               }
             }}
             onPaste={async (e) => {
-              // Handle pasted images
               const items = Array.from(e.clipboardData.items);
               const imageItems = items.filter((item) =>
                 item.type.startsWith("image/")
@@ -286,28 +334,18 @@ export function MessageInput() {
             }}
           />
 
-          {/* Action buttons */}
-          <div className="absolute right-2 bottom-2 flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isPending}
-              className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-slate-700 disabled:opacity-50 transition-colors"
-              title="Attach files (PDF, CSV, TXT, images)"
-            >
-              <Paperclip className="w-5 h-5" />
-            </button>
-            <button
-              type="submit"
-              disabled={
-                isPending ||
-                (!value.trim() && stagedFiles.length === 0 && images.length === 0)
-              }
-              className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              <Send className="w-5 h-5" />
-            </button>
-          </div>
+          {/* Send */}
+          <button
+            type="submit"
+            disabled={!canSend}
+            className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-200 mb-0.5 ${
+              canSend
+                ? "bg-white text-black hover:bg-white/90 shadow-sm"
+                : "bg-white/[0.06] text-white/20"
+            }`}
+          >
+            <ArrowUp className="w-4 h-4" strokeWidth={2.5} />
+          </button>
         </form>
 
         {/* Hidden file input */}
@@ -320,9 +358,9 @@ export function MessageInput() {
           className="hidden"
         />
 
-        {/* Error messages */}
+        {/* Errors */}
         {(error || parseError) && (
-          <div className="mt-2 text-sm text-red-400">
+          <div className="mt-2 text-[12px] text-red-400/80">
             {error?.message ?? parseError}
           </div>
         )}
