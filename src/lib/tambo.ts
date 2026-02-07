@@ -51,7 +51,20 @@ import {
   createJiraTicket,
   createJiraTicketSchema,
   createJiraTicketOutputSchema,
+  searchJiraTickets,
+  searchJiraTicketsSchema,
+  searchJiraTicketsOutputSchema,
+  assignJiraTicket,
+  assignJiraTicketSchema,
+  assignJiraTicketOutputSchema,
+  updateJiraTicket,
+  updateJiraTicketSchema,
+  updateJiraTicketOutputSchema,
 } from "@/services/jira";
+import {
+  JiraTicketList,
+  jiraTicketListSchema,
+} from "@/components/pm/jira-ticket-list";
 import {
   postToSlack,
   postToSlackSchema,
@@ -98,6 +111,30 @@ export const tools: TamboTool[] = [
     tool: postToSlack,
     inputSchema: postToSlackSchema,
     outputSchema: postToSlackOutputSchema,
+  },
+  {
+    name: "searchJiraTickets",
+    description:
+      "Searches Jira tickets with optional filters for status, type, and assignee. Use this when the user asks to see tickets, check what's in progress, view the backlog, list open tasks, or check ticket status.",
+    tool: searchJiraTickets,
+    inputSchema: searchJiraTicketsSchema,
+    outputSchema: searchJiraTicketsOutputSchema,
+  },
+  {
+    name: "assignJiraTicket",
+    description:
+      "Assigns a Jira ticket to a team member by their email address. Use this when the user asks to assign a ticket, delegate a task, or set an owner for an issue.",
+    tool: assignJiraTicket,
+    inputSchema: assignJiraTicketSchema,
+    outputSchema: assignJiraTicketOutputSchema,
+  },
+  {
+    name: "updateJiraTicket",
+    description:
+      "Updates a Jira ticket's fields — change status (To Do, In Progress, In Review, Done), priority, summary, or labels. Use this when the user asks to update a ticket, move a ticket to in progress, change priority, or modify a Jira issue.",
+    tool: updateJiraTicket,
+    inputSchema: updateJiraTicketSchema,
+    outputSchema: updateJiraTicketOutputSchema,
   },
 ];
 
@@ -157,9 +194,16 @@ export const components: TamboComponent[] = [
   {
     name: "JiraTicketPreview",
     description:
-      "Displays a Jira ticket that was just created, showing the ticket ID, title, description, type, priority, status, labels, and a link to open in Jira. Use this after a Jira ticket has been created to show the result to the user.",
+      "Displays a Jira ticket that was just created or updated, showing the ticket ID, title, description, type, priority, status, labels, and a link to open in Jira. Use this after a Jira ticket has been created, assigned, or updated to show the result to the user.",
     component: JiraTicketPreview,
     propsSchema: jiraTicketPreviewSchema,
+  },
+  {
+    name: "JiraTicketList",
+    description:
+      "Displays a list of Jira tickets with their status, priority, type, and assignee. Each ticket links to Jira. Use this after searching for tickets to show the results, e.g. when the user asks 'show me in-progress tickets' or 'what's in the backlog'.",
+    component: JiraTicketList,
+    propsSchema: jiraTicketListSchema,
   },
   {
     name: "SlackMessagePreview",
