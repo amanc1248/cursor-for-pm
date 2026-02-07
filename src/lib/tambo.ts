@@ -70,6 +70,25 @@ import {
   postToSlackSchema,
   postToSlackOutputSchema,
 } from "@/services/slack";
+import {
+  createCalendarEvent,
+  createCalendarEventSchema,
+  createCalendarEventOutputSchema,
+  listCalendarEvents,
+  listCalendarEventsSchema,
+  listCalendarEventsOutputSchema,
+  checkAvailability,
+  checkAvailabilitySchema,
+  checkAvailabilityOutputSchema,
+} from "@/services/calendar";
+import {
+  CalendarEventPreview,
+  calendarEventPreviewSchema,
+} from "@/components/pm/calendar-event-preview";
+import {
+  CalendarEventList,
+  calendarEventListSchema,
+} from "@/components/pm/calendar-event-list";
 import { uploadedFeedbackHelper } from "@/lib/feedback-store";
 import { pmPersonaHelper } from "@/lib/pm-context";
 import type { TamboComponent } from "@tambo-ai/react";
@@ -135,6 +154,30 @@ export const tools: TamboTool[] = [
     tool: updateJiraTicket,
     inputSchema: updateJiraTicketSchema,
     outputSchema: updateJiraTicketOutputSchema,
+  },
+  {
+    name: "createCalendarEvent",
+    description:
+      "Creates a Google Calendar event with title, time, attendees, and location. Use this when the user asks to schedule a meeting, book a review, set up a sprint planning session, or create any calendar event.",
+    tool: createCalendarEvent,
+    inputSchema: createCalendarEventSchema,
+    outputSchema: createCalendarEventOutputSchema,
+  },
+  {
+    name: "listCalendarEvents",
+    description:
+      "Lists upcoming Google Calendar events for the next N days. Use this when the user asks to see their schedule, check upcoming meetings, view the calendar, or asks 'what's on my calendar?'.",
+    tool: listCalendarEvents,
+    inputSchema: listCalendarEventsSchema,
+    outputSchema: listCalendarEventsOutputSchema,
+  },
+  {
+    name: "checkAvailability",
+    description:
+      "Checks calendar availability for a given time range and returns busy slots. Use this when the user asks to find a free time, check availability, or wants to know when they're available for a meeting.",
+    tool: checkAvailability,
+    inputSchema: checkAvailabilitySchema,
+    outputSchema: checkAvailabilityOutputSchema,
   },
 ];
 
@@ -253,5 +296,19 @@ export const components: TamboComponent[] = [
       "Displays structured meeting notes with attendees, summary, decisions, and action items with owners and due dates. Use this when a user asks to summarize a meeting, capture action items, document decisions, or write meeting minutes.",
     component: MeetingNotes,
     propsSchema: meetingNotesSchema,
+  },
+  {
+    name: "CalendarEventPreview",
+    description:
+      "Displays a Google Calendar event that was just created, showing the title, date/time, duration, attendees, location, and a link to open in Google Calendar. Use this after creating a calendar event to confirm it to the user.",
+    component: CalendarEventPreview,
+    propsSchema: calendarEventPreviewSchema,
+  },
+  {
+    name: "CalendarEventList",
+    description:
+      "Displays a list of upcoming Google Calendar events grouped by day, showing time, duration, title, location, and attendee count. Use this when showing the user their schedule or upcoming meetings.",
+    component: CalendarEventList,
+    propsSchema: calendarEventListSchema,
   },
 ];
