@@ -27,11 +27,12 @@ export async function GET(req: NextRequest) {
     });
 
     const tokenData = await tokenResp.json();
+    console.log("[jira/callback] token exchange status:", tokenResp.status, "has access_token:", !!tokenData.access_token);
 
     if (tokenData.error || !tokenData.access_token) {
-      console.error("Jira OAuth token error:", tokenData);
+      console.error("[jira/callback] token error:", tokenData);
       return NextResponse.redirect(
-        `${APP_URL}/settings?error=jira_auth_failed`
+        `${APP_URL}/settings?error=jira_token_failed`
       );
     }
 
@@ -43,6 +44,7 @@ export async function GET(req: NextRequest) {
       }
     );
     const resources = await resourcesResp.json();
+    console.log("[jira/callback] resources count:", resources.length);
 
     if (!resources.length) {
       return NextResponse.redirect(
@@ -52,12 +54,9 @@ export async function GET(req: NextRequest) {
 
     const site = resources[0];
 
-    // Use NextResponse with explicit status 302 and location header
-    const redirectUrl = `${APP_URL}/settings?connected=jira`;
-    const response = new NextResponse(null, {
-      status: 302,
-      headers: { Location: redirectUrl },
-    });
+    const response = NextResponse.redirect(
+      `${APP_URL}/settings?connected=jira`
+    );
 
     setTokenCookieOnResponse(response, "jira_tokens", {
       accessToken: tokenData.access_token,
@@ -67,11 +66,12 @@ export async function GET(req: NextRequest) {
       expiresAt: Date.now() + tokenData.expires_in * 1000,
     });
 
+    console.log("[jira/callback] cookie set, redirecting to settings");
     return response;
   } catch (err) {
-    console.error("Jira callback error:", err);
+    console.error("[jira/callback] unexpected error:", err);
     return NextResponse.redirect(
-      `${APP_URL}/settings?error=jira_auth_failed`
+      `${APP_URL}/settings?error=jira_callback_error`
     );
   }
 }
