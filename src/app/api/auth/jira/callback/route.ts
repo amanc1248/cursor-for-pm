@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { setTokenCookieOnResponse } from "@/lib/auth/cookies";
+import { encrypt } from "@/lib/auth/crypto";
 
 const JIRA_OAUTH_CLIENT_ID = process.env.JIRA_OAUTH_CLIENT_ID!;
 const JIRA_OAUTH_CLIENT_SECRET = process.env.JIRA_OAUTH_CLIENT_SECRET!;
@@ -45,27 +45,24 @@ export async function GET(req: NextRequest) {
     }
 
     const site = resources[0];
-    const redirectUrl = `${APP_URL}/settings?connected=jira`;
 
-    // Use HTML response so Set-Cookie is reliably sent (not dropped on 302)
-    const html = `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${redirectUrl}"><script>window.location.href="${redirectUrl}";</script></head><body>Redirecting...</body></html>`;
-    const response = new NextResponse(html, {
-      status: 200,
-      headers: { "Content-Type": "text/html" },
-    });
+    // Encrypt token data and pass via URL param for the settings page to save
+    const encrypted = encrypt(
+      JSON.stringify({
+        accessToken: tokenData.access_token,
+        refreshToken: tokenData.refresh_token,
+        cloudId: site.id,
+        siteName: site.name,
+        expiresAt: Date.now() + tokenData.expires_in * 1000,
+      })
+    );
 
-    setTokenCookieOnResponse(response, "jira_tokens", {
-      accessToken: tokenData.access_token,
-      refreshToken: tokenData.refresh_token,
-      cloudId: site.id,
-      siteName: site.name,
-      expiresAt: Date.now() + tokenData.expires_in * 1000,
-    });
+    const redirectUrl = new URL(`${APP_URL}/settings`);
+    redirectUrl.searchParams.set("connected", "jira");
+    redirectUrl.searchParams.set("pending_token", encrypted);
+    redirectUrl.searchParams.set("service", "jira");
 
-    // Clear disabled flag if it was set
-    response.cookies.set("jira_disabled", "", { path: "/", maxAge: 0 });
-
-    return response;
+    return NextResponse.redirect(redirectUrl.toString());
   } catch (err) {
     console.error("[jira/callback] error:", err);
     return NextResponse.redirect(`${APP_URL}/settings?error=jira_callback_error`);

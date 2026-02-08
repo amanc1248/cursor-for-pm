@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { setTokenCookieOnResponse } from "@/lib/auth/cookies";
+import { encrypt } from "@/lib/auth/crypto";
 
 const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID!;
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET!;
@@ -40,19 +40,17 @@ export async function GET(req: NextRequest) {
   });
   const user = await userResp.json();
 
-  const redirectUrl = `${APP_URL}/settings?connected=github`;
-  const html = `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${redirectUrl}"><script>window.location.href="${redirectUrl}";</script></head><body>Redirecting...</body></html>`;
-  const response = new NextResponse(html, {
-    status: 200,
-    headers: { "Content-Type": "text/html" },
-  });
+  const encrypted = encrypt(
+    JSON.stringify({
+      accessToken: tokenData.access_token,
+      username: user.login,
+    })
+  );
 
-  setTokenCookieOnResponse(response, "github_tokens", {
-    accessToken: tokenData.access_token,
-    username: user.login,
-  });
+  const redirectUrl = new URL(`${APP_URL}/settings`);
+  redirectUrl.searchParams.set("connected", "github");
+  redirectUrl.searchParams.set("pending_token", encrypted);
+  redirectUrl.searchParams.set("service", "github");
 
-  response.cookies.set("github_disabled", "", { path: "/", maxAge: 0 });
-
-  return response;
+  return NextResponse.redirect(redirectUrl.toString());
 }

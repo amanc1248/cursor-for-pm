@@ -133,12 +133,39 @@ function SettingsContent() {
 
   useEffect(() => {
     const connected = searchParams.get("connected");
-    if (connected) {
+    const pendingToken = searchParams.get("pending_token");
+    const service = searchParams.get("service");
+
+    if (pendingToken && service) {
+      // Save the token via API call (works reliably on Vercel)
+      fetch("/api/auth/save-token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ service, data: pendingToken }),
+      })
+        .then(() => {
+          // Clean URL params
+          const url = new URL(window.location.href);
+          url.searchParams.delete("pending_token");
+          url.searchParams.delete("service");
+          window.history.replaceState({}, "", url.toString());
+          // Refresh status
+          fetchStatus();
+          if (connected) {
+            setToast(`${connected.charAt(0).toUpperCase() + connected.slice(1)} connected successfully!`);
+            setTimeout(() => setToast(null), 4000);
+          }
+        })
+        .catch(() => {
+          setToast("Failed to save connection. Please try again.");
+          setTimeout(() => setToast(null), 4000);
+        });
+    } else if (connected) {
       setToast(`${connected.charAt(0).toUpperCase() + connected.slice(1)} connected successfully!`);
       setTimeout(() => setToast(null), 4000);
-      // Refresh status
       fetchStatus();
     }
+
     const error = searchParams.get("error");
     if (error) {
       setToast(`Connection failed: ${error.replace(/_/g, " ")}`);

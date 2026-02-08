@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { setTokenCookieOnResponse } from "@/lib/auth/cookies";
+import { encrypt } from "@/lib/auth/crypto";
 
 const SLACK_CLIENT_ID = process.env.SLACK_CLIENT_ID!;
 const SLACK_CLIENT_SECRET = process.env.SLACK_CLIENT_SECRET!;
@@ -30,20 +30,18 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(`${APP_URL}/settings?error=slack_auth_failed`);
   }
 
-  const redirectUrl = `${APP_URL}/settings?connected=slack`;
-  const html = `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${redirectUrl}"><script>window.location.href="${redirectUrl}";</script></head><body>Redirecting...</body></html>`;
-  const response = new NextResponse(html, {
-    status: 200,
-    headers: { "Content-Type": "text/html" },
-  });
+  const encrypted = encrypt(
+    JSON.stringify({
+      botToken: data.access_token,
+      teamName: data.team?.name ?? "Workspace",
+      teamId: data.team?.id ?? "",
+    })
+  );
 
-  setTokenCookieOnResponse(response, "slack_tokens", {
-    botToken: data.access_token,
-    teamName: data.team?.name ?? "Workspace",
-    teamId: data.team?.id ?? "",
-  });
+  const redirectUrl = new URL(`${APP_URL}/settings`);
+  redirectUrl.searchParams.set("connected", "slack");
+  redirectUrl.searchParams.set("pending_token", encrypted);
+  redirectUrl.searchParams.set("service", "slack");
 
-  response.cookies.set("slack_disabled", "", { path: "/", maxAge: 0 });
-
-  return response;
+  return NextResponse.redirect(redirectUrl.toString());
 }

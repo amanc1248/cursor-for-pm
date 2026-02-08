@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { setTokenCookieOnResponse } from "@/lib/auth/cookies";
+import { encrypt } from "@/lib/auth/crypto";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
@@ -45,19 +45,17 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const redirectUrl = `${APP_URL}/settings?connected=google`;
-  const html = `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${redirectUrl}"><script>window.location.href="${redirectUrl}";</script></head><body>Redirecting...</body></html>`;
-  const response = new NextResponse(html, {
-    status: 200,
-    headers: { "Content-Type": "text/html" },
-  });
+  const encrypted = encrypt(
+    JSON.stringify({
+      refreshToken: data.refresh_token,
+      email: email ?? undefined,
+    })
+  );
 
-  setTokenCookieOnResponse(response, "google_tokens", {
-    refreshToken: data.refresh_token,
-    email: email ?? undefined,
-  });
+  const redirectUrl = new URL(`${APP_URL}/settings`);
+  redirectUrl.searchParams.set("connected", "google");
+  redirectUrl.searchParams.set("pending_token", encrypted);
+  redirectUrl.searchParams.set("service", "google");
 
-  response.cookies.set("google_disabled", "", { path: "/", maxAge: 0 });
-
-  return response;
+  return NextResponse.redirect(redirectUrl.toString());
 }
