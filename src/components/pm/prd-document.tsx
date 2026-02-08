@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import { z } from "zod";
+import { useTamboStreamStatus } from "@tambo-ai/react";
 
 export const prdDocumentSchema = z.object({
   title: z.string().describe("PRD title, e.g. 'Dark Mode Support'"),
@@ -50,6 +51,10 @@ export function PRDDocument({
   risks,
   successMetrics,
 }: PRDDocumentProps) {
+  const { streamStatus } = useTamboStreamStatus<PRDDocumentProps>();
+
+  const isStreaming = streamStatus.isStreaming;
+
   const generateMarkdown = useCallback(() => {
     const lines: string[] = [];
     lines.push(`# ${title ?? "Product Requirements Document"}`);
@@ -162,9 +167,14 @@ export function PRDDocument({
           </div>
           <button
             onClick={handleDownload}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-5 py-2.5 rounded-xl transition-colors shadow-lg text-sm shrink-0"
+            disabled={isStreaming}
+            className={`font-semibold px-5 py-2.5 rounded-xl transition-colors shadow-lg text-sm shrink-0 ${
+              isStreaming
+                ? "bg-white/[0.06] text-white/30 cursor-wait"
+                : "bg-emerald-600 hover:bg-emerald-700 text-white"
+            }`}
           >
-            Download .md
+            {isStreaming ? "Generating..." : "Download .md"}
           </button>
         </div>
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { z } from "zod";
+import { useTamboStreamStatus } from "@tambo-ai/react";
 
 export const codeDependencyAnalysisSchema = z.object({
   repo: z.string().optional(),
@@ -31,6 +32,25 @@ export function CodeDependencyAnalysis({
   suggestedApproach,
   error,
 }: Props) {
+  const { streamStatus } = useTamboStreamStatus<Props>();
+
+  if (streamStatus.isPending) {
+    return (
+      <div className="bg-[#12121a] border border-white/[0.08] rounded-2xl p-6 animate-pulse">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-4 h-4 rounded bg-white/[0.06]" />
+          <div className="h-4 w-48 rounded bg-white/[0.06]" />
+        </div>
+        <div className="space-y-3">
+          <div className="h-3 w-full rounded bg-white/[0.04]" />
+          <div className="h-3 w-3/4 rounded bg-white/[0.04]" />
+          <div className="h-20 w-full rounded-lg bg-white/[0.03] mt-4" />
+          <div className="h-20 w-full rounded-lg bg-white/[0.03]" />
+        </div>
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="bg-[#12121a] border border-red-500/20 rounded-2xl p-5">

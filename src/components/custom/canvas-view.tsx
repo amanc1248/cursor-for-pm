@@ -1,9 +1,18 @@
 "use client";
 
-import { useTamboThread } from "@tambo-ai/react";
+import { useTamboThread, useTamboGenerationStage, GenerationStage } from "@tambo-ai/react";
+
+const activeStages = new Set([
+  GenerationStage.CHOOSING_COMPONENT,
+  GenerationStage.FETCHING_CONTEXT,
+  GenerationStage.HYDRATING_COMPONENT,
+  GenerationStage.STREAMING_RESPONSE,
+]);
 
 export function CanvasView() {
   const { thread } = useTamboThread();
+  const { generationStage } = useTamboGenerationStage();
+  const isGenerating = activeStages.has(generationStage);
 
   const renderedComponents =
     thread?.messages
@@ -19,8 +28,15 @@ export function CanvasView() {
     <div className="h-full overflow-y-auto p-8">
       {latestComponent ? (
         <div className="max-w-6xl mx-auto space-y-8">
-          {/* Latest — prominent */}
-          <div className="animate-fade-in-up">{latestComponent.component}</div>
+          {/* Latest — prominent, with streaming shimmer */}
+          <div className="animate-fade-in-up relative">
+            {latestComponent.component}
+            {isGenerating && (
+              <div className="absolute inset-0 pointer-events-none rounded-2xl overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent animate-shimmer" />
+              </div>
+            )}
+          </div>
 
           {/* Previous — faded */}
           {renderedComponents.length > 1 && (

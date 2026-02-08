@@ -108,6 +108,10 @@ import {
 import { uploadedFeedbackHelper } from "@/lib/feedback-store";
 import { pmPersonaHelper } from "@/lib/pm-context";
 import { productDocHelper } from "@/lib/product-doc-store";
+import {
+  currentPageContextHelper,
+  currentTimeContextHelper,
+} from "@tambo-ai/react";
 import type { TamboComponent } from "@tambo-ai/react";
 import { TamboTool } from "@tambo-ai/react";
 
@@ -115,6 +119,8 @@ export const contextHelpers = {
   uploadedFeedback: uploadedFeedbackHelper,
   pmPersona: pmPersonaHelper,
   productDoc: productDocHelper,
+  currentPage: currentPageContextHelper,
+  currentTime: currentTimeContextHelper,
 };
 
 export const tools: TamboTool[] = [

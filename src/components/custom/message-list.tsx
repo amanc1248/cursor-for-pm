@@ -1,18 +1,28 @@
 "use client";
 
-import { useTamboThread, useTamboThreadInput } from "@tambo-ai/react";
+import { useTamboThread, useTamboThreadInput, useTamboGenerationStage, GenerationStage } from "@tambo-ai/react";
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 
-function TypingIndicator() {
+const stageLabels: Record<string, string> = {
+  [GenerationStage.CHOOSING_COMPONENT]: "Choosing component",
+  [GenerationStage.FETCHING_CONTEXT]: "Fetching context",
+  [GenerationStage.HYDRATING_COMPONENT]: "Building UI",
+  [GenerationStage.STREAMING_RESPONSE]: "Generating response",
+};
+
+function GenerationIndicator() {
+  const { generationStage } = useTamboGenerationStage();
+  const label = stageLabels[generationStage] ?? "Thinking";
+
   return (
-    <div className="flex justify-start">
-      <div className="bg-white/[0.04] rounded-2xl rounded-bl-md px-4 py-3">
+    <div className="flex justify-start animate-fade-in-up">
+      <div className="bg-white/[0.04] rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-2.5">
         <div className="flex items-center gap-1">
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="w-1.5 h-1.5 rounded-full bg-white/30"
+              className="w-1.5 h-1.5 rounded-full bg-indigo-400/60"
               style={{
                 animation: "typing-bounce 1.2s ease-in-out infinite",
                 animationDelay: `${i * 0.15}s`,
@@ -20,6 +30,9 @@ function TypingIndicator() {
             />
           ))}
         </div>
+        <span className="text-[11px] text-white/30 font-medium tracking-wide">
+          {label}...
+        </span>
       </div>
     </div>
   );
@@ -188,7 +201,7 @@ export function MessageList() {
         );
       })}
 
-      {isPending && <TypingIndicator />}
+      {isPending && <GenerationIndicator />}
       <div ref={bottomRef} />
     </div>
   );
