@@ -24,13 +24,35 @@ function TypingIndicator() {
   );
 }
 
+/** Render simple markdown bold (**text**) as <strong> */
+function FormattedText({ text, className }: { text: string; className?: string }) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return (
+    <p className={className}>
+      {parts.map((part, i) => {
+        if (part.startsWith("**") && part.endsWith("**")) {
+          return <strong key={i} className="font-semibold text-white">{part.slice(2, -2)}</strong>;
+        }
+        return <span key={i}>{part}</span>;
+      })}
+    </p>
+  );
+}
+
+/** Check if text looks like raw JSON / tool output */
+function looksLikeToolOutput(text: string): boolean {
+  const trimmed = text.trim();
+  if (trimmed.startsWith("{") && trimmed.endsWith("}")) return true;
+  if (trimmed.startsWith("[") && trimmed.endsWith("]")) return true;
+  return false;
+}
+
 export function MessageList() {
   const { thread } = useTamboThread();
   const { isPending } = useTamboThreadInput();
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom on new messages or when pending
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [thread?.messages.length, isPending]);
@@ -56,6 +78,35 @@ export function MessageList() {
       {thread.messages.map((message) => {
         const isUser = message.role === "user";
 
+        // Skip tool-result messages (they show raw JSON)
+        if (message.role === "tool") return null;
+
+        // Check if this is a tool-call-only message with no meaningful text
+        const hasToolCall = message.role === "assistant" && message.toolCallRequest;
+        const textParts = message.content.filter(
+          (c) => c.type === "text" && c.text?.trim()
+        );
+
+        // If the only text content looks like raw JSON, skip it
+        const allTextIsJson =
+          textParts.length > 0 &&
+          textParts.every((c) => c.type === "text" && looksLikeToolOutput(c.text ?? ""));
+        if (allTextIsJson) return null;
+
+        // If it's a tool call with no text, show a compact indicator
+        if (hasToolCall && textParts.length === 0) {
+          return (
+            <div key={message.id} className="flex justify-start animate-fade-in-up">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.03]">
+                <div className="w-1 h-1 rounded-full bg-indigo-400/60" />
+                <span className="text-[11px] text-white/25 font-medium tracking-wide">
+                  @{message.toolCallRequest!.toolName}
+                </span>
+              </div>
+            </div>
+          );
+        }
+
         return (
           <div
             key={message.id}
@@ -68,29 +119,28 @@ export function MessageList() {
                   : "bg-white/[0.04] text-white/90 rounded-bl-md"
               }`}
             >
-              {/* Text content */}
               {message.content.map((contentPart, idx) => {
-                if (contentPart.type === "text") {
+                if (contentPart.type === "text" && contentPart.text?.trim()) {
+                  // Skip raw JSON in assistant messages
+                  if (!isUser && looksLikeToolOutput(contentPart.text)) return null;
                   return (
-                    <p
+                    <FormattedText
                       key={idx}
+                      text={contentPart.text}
                       className={`text-[13.5px] leading-relaxed whitespace-pre-wrap ${
                         isUser ? "text-white" : "text-white/80"
                       }`}
-                    >
-                      {contentPart.text}
-                    </p>
+                    />
                   );
                 }
                 return null;
               })}
 
-              {/* Tool call indicator */}
-              {message.role === "assistant" && message.toolCallRequest && (
+              {hasToolCall && (
                 <div className="mt-2 flex items-center gap-1.5">
                   <div className="w-1 h-1 rounded-full bg-indigo-400/60" />
                   <span className="text-[11px] text-white/30 font-medium tracking-wide">
-                    {message.toolCallRequest.toolName}
+                    @{message.toolCallRequest!.toolName}
                   </span>
                 </div>
               )}
@@ -99,10 +149,7 @@ export function MessageList() {
         );
       })}
 
-      {/* Typing indicator */}
       {isPending && <TypingIndicator />}
-
-      {/* Scroll anchor */}
       <div ref={bottomRef} />
     </div>
   );

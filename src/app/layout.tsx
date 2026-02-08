@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+
+export const metadata: Metadata = {
+  title: "PM Assistant",
+  description: "AI-powered product management assistant with Jira, Slack, and Calendar integrations",
+};
 
 const inter = Inter({
   variable: "--font-inter",
