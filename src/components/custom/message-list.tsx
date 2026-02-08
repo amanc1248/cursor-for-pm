@@ -2,6 +2,7 @@
 
 import { useTamboThread, useTamboThreadInput } from "@tambo-ai/react";
 import { useEffect, useRef } from "react";
+import Link from "next/link";
 
 function TypingIndicator() {
   return (
@@ -37,6 +38,32 @@ function FormattedText({ text, className }: { text: string; className?: string }
       })}
     </p>
   );
+}
+
+/** Detect "not connected" messages and render a settings link */
+function ConnectionPrompt({ service }: { service: string }) {
+  return (
+    <Link
+      href="/settings"
+      className="mt-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/15 transition-colors group"
+    >
+      <div className="w-5 h-5 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 text-[10px]">
+        !
+      </div>
+      <span className="text-amber-300/80 text-[12px] font-medium group-hover:text-amber-200">
+        Connect {service} in Settings
+      </span>
+      <span className="text-amber-400/50 text-[12px] ml-auto">&rarr;</span>
+    </Link>
+  );
+}
+
+function detectDisconnectedService(text: string): string | null {
+  const lower = text.toLowerCase();
+  if (lower.includes("jira") && (lower.includes("not connected") || lower.includes("connect your jira"))) return "Jira";
+  if (lower.includes("slack") && (lower.includes("not connected") || lower.includes("connect your slack"))) return "Slack";
+  if ((lower.includes("calendar") || lower.includes("google")) && (lower.includes("not connected") || lower.includes("connect your google"))) return "Google Calendar";
+  return null;
 }
 
 /** Check if text looks like raw JSON / tool output */
@@ -144,6 +171,17 @@ export function MessageList() {
                   </span>
                 </div>
               )}
+
+              {/* Connection prompt for disconnected services */}
+              {!isUser &&
+                (() => {
+                  const fullText = message.content
+                    .filter((c) => c.type === "text")
+                    .map((c) => c.text ?? "")
+                    .join(" ");
+                  const service = detectDisconnectedService(fullText);
+                  return service ? <ConnectionPrompt service={service} /> : null;
+                })()}
             </div>
           </div>
         );

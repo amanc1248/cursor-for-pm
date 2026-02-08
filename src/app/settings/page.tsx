@@ -257,8 +257,24 @@ function SettingsContent() {
           })}
         </div>
 
+        {/* Continue to chat */}
+        <div className="mt-8 flex items-center justify-between">
+          <Link
+            href="/chat"
+            className="text-white/30 hover:text-white/60 text-[13px] transition-colors"
+          >
+            Skip for now
+          </Link>
+          <Link
+            href="/chat"
+            className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold px-6 py-2.5 rounded-xl text-[14px] transition-all shadow-lg shadow-indigo-500/25"
+          >
+            Continue to Chat
+          </Link>
+        </div>
+
         {/* Footer note */}
-        <div className="mt-10 p-4 bg-white/[0.02] border border-white/[0.04] rounded-xl">
+        <div className="mt-8 p-4 bg-white/[0.02] border border-white/[0.04] rounded-xl">
           <p className="text-white/25 text-[12px] leading-relaxed">
             Credentials are encrypted with AES-256-GCM and stored in HTTP-only
             cookies. They are never sent to third parties beyond the respective

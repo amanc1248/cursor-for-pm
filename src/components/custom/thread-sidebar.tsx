@@ -47,9 +47,10 @@ export function ThreadSidebar() {
   return (
     <div className="border-b border-white/[0.06]">
       {/* Toggle header */}
-      <button
+      <div
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-5 py-3 text-white/40 hover:text-white/60 transition-colors"
+        className="w-full flex items-center justify-between px-5 py-3 text-white/40 hover:text-white/60 transition-colors cursor-pointer"
+        role="button"
       >
         <span className="text-[11px] font-medium uppercase tracking-widest">
           Conversations
@@ -74,7 +75,7 @@ export function ThreadSidebar() {
             <ChevronDown className="w-3.5 h-3.5" />
           )}
         </div>
-      </button>
+      </div>
 
       {/* Thread list */}
       {expanded && (
