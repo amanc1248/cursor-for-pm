@@ -60,6 +60,9 @@ import {
   updateJiraTicket,
   updateJiraTicketSchema,
   updateJiraTicketOutputSchema,
+  checkDeveloperAvailability,
+  checkDeveloperAvailabilitySchema,
+  checkDeveloperAvailabilityOutputSchema,
 } from "@/services/jira";
 import {
   JiraTicketList,
@@ -154,6 +157,14 @@ export const tools: TamboTool[] = [
     tool: updateJiraTicket,
     inputSchema: updateJiraTicketSchema,
     outputSchema: updateJiraTicketOutputSchema,
+  },
+  {
+    name: "checkDeveloperAvailability",
+    description:
+      "Checks if a developer/team member is available for new tasks by looking at their current Jira assignments. Shows in-progress, to-do, and in-review tickets. Use this when a user asks if someone is free, available, has bandwidth, or can take on a new task.",
+    tool: checkDeveloperAvailability,
+    inputSchema: checkDeveloperAvailabilitySchema,
+    outputSchema: checkDeveloperAvailabilityOutputSchema,
   },
   {
     name: "createCalendarEvent",

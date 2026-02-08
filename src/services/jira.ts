@@ -201,3 +201,126 @@ export async function updateJiraTicket(
 
   return response.json();
 }
+
+// ─── Check Developer Availability ───────────────────────────────────
+
+export const checkDeveloperAvailabilitySchema = z.object({
+  assignee: z
+    .string()
+    .describe(
+      "The developer's email address or display name to check availability for"
+    ),
+});
+
+export const checkDeveloperAvailabilityOutputSchema = z.object({
+  assignee: z.string(),
+  totalActiveTickets: z.number(),
+  inProgress: z.array(
+    z.object({
+      ticketId: z.string(),
+      title: z.string(),
+      priority: z.string(),
+      type: z.string(),
+      url: z.string(),
+    })
+  ),
+  toDo: z.array(
+    z.object({
+      ticketId: z.string(),
+      title: z.string(),
+      priority: z.string(),
+      type: z.string(),
+      url: z.string(),
+    })
+  ),
+  inReview: z.array(
+    z.object({
+      ticketId: z.string(),
+      title: z.string(),
+      priority: z.string(),
+      type: z.string(),
+      url: z.string(),
+    })
+  ),
+  available: z.boolean(),
+  summary: z.string(),
+});
+
+export async function checkDeveloperAvailability(
+  input: z.infer<typeof checkDeveloperAvailabilitySchema>
+) {
+  // Search all non-Done tickets for this person
+  const params = new URLSearchParams({
+    assignee: input.assignee,
+    maxResults: "50",
+  });
+
+  const response = await fetch(`/api/jira?${params.toString()}`);
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(
+      err.error ??
+        `Failed to check availability (${response.status})`
+    );
+  }
+
+  const data = await response.json();
+  const tickets = data.tickets ?? [];
+
+  const inProgress = tickets
+    .filter(
+      (t: { status: string }) => t.status.toLowerCase() === "in progress"
+    )
+    .map((t: { ticketId: string; title: string; priority: string; type: string; url: string }) => ({
+      ticketId: t.ticketId,
+      title: t.title,
+      priority: t.priority,
+      type: t.type,
+      url: t.url,
+    }));
+
+  const toDo = tickets
+    .filter((t: { status: string }) => t.status.toLowerCase() === "to do")
+    .map((t: { ticketId: string; title: string; priority: string; type: string; url: string }) => ({
+      ticketId: t.ticketId,
+      title: t.title,
+      priority: t.priority,
+      type: t.type,
+      url: t.url,
+    }));
+
+  const inReview = tickets
+    .filter(
+      (t: { status: string }) => t.status.toLowerCase() === "in review"
+    )
+    .map((t: { ticketId: string; title: string; priority: string; type: string; url: string }) => ({
+      ticketId: t.ticketId,
+      title: t.title,
+      priority: t.priority,
+      type: t.type,
+      url: t.url,
+    }));
+
+  const totalActive = inProgress.length + toDo.length + inReview.length;
+  const available = inProgress.length === 0;
+
+  let summary: string;
+  if (totalActive === 0) {
+    summary = `${input.assignee} has no active tickets and is available for new tasks.`;
+  } else if (available) {
+    summary = `${input.assignee} has ${totalActive} ticket(s) in the queue (${toDo.length} to do, ${inReview.length} in review) but nothing actively in progress — available for new work.`;
+  } else {
+    summary = `${input.assignee} is currently working on ${inProgress.length} ticket(s) in progress, with ${toDo.length} to do and ${inReview.length} in review (${totalActive} total active). Consider reassigning or waiting.`;
+  }
+
+  return {
+    assignee: input.assignee,
+    totalActiveTickets: totalActive,
+    inProgress,
+    toDo,
+    inReview,
+    available,
+    summary,
+  };
+}
