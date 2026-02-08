@@ -4,11 +4,9 @@ import { NextResponse } from "next/server";
 // ─── Jira ──────────────────────────────────────────────────
 
 export interface JiraOAuthTokens {
-  accessToken: string;
   refreshToken: string;
   cloudId: string;
   siteName: string;
-  expiresAt: number; // epoch ms
 }
 
 export interface JiraCredentials {
@@ -27,7 +25,7 @@ export interface JiraCredentials {
 
 async function refreshJiraToken(
   tokens: JiraOAuthTokens
-): Promise<{ tokens: JiraOAuthTokens; response?: NextResponse } | null> {
+): Promise<{ accessToken: string; refreshToken: string } | null> {
   try {
     const resp = await fetch("https://auth.atlassian.com/oauth/token", {
       method: "POST",
@@ -42,12 +40,8 @@ async function refreshJiraToken(
     if (!resp.ok) return null;
     const data = await resp.json();
     return {
-      tokens: {
-        ...tokens,
-        accessToken: data.access_token,
-        refreshToken: data.refresh_token, // rotating refresh token
-        expiresAt: Date.now() + data.expires_in * 1000,
-      },
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token,
     };
   } catch {
     return null;
@@ -58,28 +52,24 @@ export async function getJiraCredentials(): Promise<JiraCredentials> {
   // Check if user explicitly disconnected
   if (await isServiceDisabled("jira")) return { connected: false, mode: "none" };
 
-  // 1. Try cookie (OAuth)
+  // 1. Try cookie (OAuth) — cookie only stores refreshToken + cloudId + siteName
   const tokens = await getTokenCookie<JiraOAuthTokens>("jira_tokens");
-  if (tokens) {
-    // Refresh if expired (with 60s buffer)
-    if (tokens.expiresAt < Date.now() + 60_000) {
-      const refreshed = await refreshJiraToken(tokens);
-      if (refreshed) {
-        // We'll save the refreshed token in the response via middleware
-        // For now, return the refreshed access token
-        return {
-          connected: true,
-          mode: "oauth",
-          accessToken: refreshed.tokens.accessToken,
-          cloudId: refreshed.tokens.cloudId,
-          siteName: refreshed.tokens.siteName,
-        };
-      }
+  if (tokens && tokens.refreshToken) {
+    // Always refresh to get a fresh access token (we don't store the JWT)
+    const refreshed = await refreshJiraToken(tokens);
+    if (refreshed) {
+      return {
+        connected: true,
+        mode: "oauth",
+        accessToken: refreshed.accessToken,
+        cloudId: tokens.cloudId,
+        siteName: tokens.siteName,
+      };
     }
+    // Refresh failed but cookie exists — still report connected for status checks
     return {
       connected: true,
       mode: "oauth",
-      accessToken: tokens.accessToken,
       cloudId: tokens.cloudId,
       siteName: tokens.siteName,
     };
@@ -257,10 +247,15 @@ export async function saveRefreshedJiraTokens(
   response: NextResponse
 ): Promise<void> {
   const tokens = await getTokenCookie<JiraOAuthTokens>("jira_tokens");
-  if (!tokens || tokens.expiresAt > Date.now() + 60_000) return;
+  if (!tokens) return;
 
+  // Refresh and update the stored refresh token (it rotates)
   const refreshed = await refreshJiraToken(tokens);
   if (refreshed) {
-    setTokenCookieOnResponse(response, "jira_tokens", { ...refreshed.tokens });
+    setTokenCookieOnResponse(response, "jira_tokens", {
+      refreshToken: refreshed.refreshToken,
+      cloudId: tokens.cloudId,
+      siteName: tokens.siteName,
+    });
   }
 }

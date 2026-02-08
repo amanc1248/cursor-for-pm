@@ -13,7 +13,6 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Exchange code for tokens
     const tokenResp = await fetch("https://auth.atlassian.com/oauth/token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -33,7 +32,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(`${APP_URL}/settings?error=jira_token_failed`);
     }
 
-    // Get accessible resources (cloudId + site name)
     const resourcesResp = await fetch(
       "https://api.atlassian.com/oauth/token/accessible-resources",
       { headers: { Authorization: `Bearer ${tokenData.access_token}` } }
@@ -46,14 +44,13 @@ export async function GET(req: NextRequest) {
 
     const site = resources[0];
 
-    // Encrypt token data and pass via URL param for the settings page to save
+    // Only store refresh token + metadata (NOT the huge JWT access token)
+    // This keeps the cookie/URL payload tiny (~150 bytes vs ~2700 bytes)
     const encrypted = encrypt(
       JSON.stringify({
-        accessToken: tokenData.access_token,
         refreshToken: tokenData.refresh_token,
         cloudId: site.id,
         siteName: site.name,
-        expiresAt: Date.now() + tokenData.expires_in * 1000,
       })
     );
 
