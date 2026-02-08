@@ -2,31 +2,22 @@
 
 import { z } from "zod";
 
-const ticketSchema = z.object({
-  ticketId: z.string(),
-  title: z.string(),
-  priority: z.string(),
-  type: z.string(),
-  url: z.string(),
-});
-
 export const developerAvailabilitySchema = z.object({
-  assignee: z.string().describe("Developer name or email"),
-  totalActiveTickets: z.number().describe("Total non-Done tickets"),
-  available: z.boolean().describe("Whether the developer is available"),
-  summary: z.string().describe("Plain English availability summary"),
-  inProgress: z
-    .array(ticketSchema)
-    .optional()
-    .describe("Tickets currently in progress"),
-  toDo: z
-    .array(ticketSchema)
-    .optional()
-    .describe("Tickets in the to-do queue"),
-  inReview: z
-    .array(ticketSchema)
-    .optional()
-    .describe("Tickets in review"),
+  assignee: z.string(),
+  totalActiveTickets: z.number(),
+  available: z.boolean(),
+  summary: z.string(),
+  tickets: z
+    .array(
+      z.object({
+        id: z.string(),
+        title: z.string(),
+        priority: z.string(),
+        status: z.string(),
+        url: z.string().optional(),
+      })
+    )
+    .optional(),
 });
 
 export type DeveloperAvailabilityProps = z.infer<
@@ -41,55 +32,38 @@ const priorityDots: Record<string, string> = {
   Lowest: "bg-gray-400",
 };
 
-const typeIcons: Record<string, string> = {
-  Story: "📖",
-  Task: "✅",
-  Bug: "🐛",
-  Epic: "⚡",
-  Feature: "✨",
+const statusColors: Record<string, string> = {
+  "In Progress": "text-blue-400",
+  "To Do": "text-slate-400",
+  "In Review": "text-amber-400",
 };
 
-function TicketRow({
-  ticket,
-}: {
-  ticket: z.infer<typeof ticketSchema>;
-}) {
-  return (
-    <a
-      href={ticket.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.03] rounded-xl transition-colors group"
-    >
-      <span className="text-sm" title={ticket.type}>
-        {typeIcons[ticket.type] ?? "📋"}
-      </span>
-      <span className="text-blue-400 font-mono text-xs font-semibold shrink-0">
-        {ticket.ticketId}
-      </span>
-      <span className="text-white/80 text-sm truncate group-hover:text-blue-300 transition-colors">
-        {ticket.title}
-      </span>
-      <div
-        className={`w-2 h-2 rounded-full shrink-0 ml-auto ${priorityDots[ticket.priority] ?? "bg-gray-400"}`}
-        title={`${ticket.priority} priority`}
-      />
-    </a>
-  );
-}
+const statusDots: Record<string, string> = {
+  "In Progress": "bg-blue-400",
+  "To Do": "bg-slate-400",
+  "In Review": "bg-amber-400",
+};
 
 export function DeveloperAvailability({
   assignee,
   totalActiveTickets,
   available,
   summary,
-  inProgress,
-  toDo,
-  inReview,
+  tickets,
 }: DeveloperAvailabilityProps) {
-  const inProgressCount = inProgress?.length ?? 0;
-  const toDoCount = toDo?.length ?? 0;
-  const inReviewCount = inReview?.length ?? 0;
+  const grouped = (tickets ?? []).reduce(
+    (acc, t) => {
+      const key = t.status || "To Do";
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(t);
+      return acc;
+    },
+    {} as Record<string, typeof tickets>
+  );
+
+  const inProgressCount = grouped["In Progress"]?.length ?? 0;
+  const toDoCount = grouped["To Do"]?.length ?? 0;
+  const inReviewCount = grouped["In Review"]?.length ?? 0;
 
   return (
     <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl border border-slate-600/30 shadow-2xl overflow-hidden">
@@ -106,7 +80,6 @@ export function DeveloperAvailability({
             </div>
           </div>
 
-          {/* Availability badge */}
           <div
             className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-semibold ${
               available
@@ -125,10 +98,8 @@ export function DeveloperAvailability({
           </div>
         </div>
 
-        {/* Summary */}
         <p className="text-gray-300 text-sm leading-relaxed">{summary}</p>
 
-        {/* Stats bar */}
         <div className="flex items-center gap-4 mt-4">
           <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-700/40 rounded-lg">
             <div className="w-2 h-2 rounded-full bg-blue-400" />
@@ -156,44 +127,54 @@ export function DeveloperAvailability({
 
       {/* Ticket sections */}
       <div className="px-6 py-4 space-y-4">
-        {inProgressCount > 0 && (
-          <div>
-            <h4 className="text-blue-400 text-xs font-semibold uppercase tracking-wider mb-2 px-4">
-              In Progress
+        {Object.entries(grouped).map(([status, items]) => (
+          <div key={status}>
+            <h4
+              className={`text-xs font-semibold uppercase tracking-wider mb-2 px-4 ${statusColors[status] ?? "text-gray-400"}`}
+            >
+              {status}
             </h4>
             <div className="space-y-0.5">
-              {inProgress!.map((t) => (
-                <TicketRow key={t.ticketId} ticket={t} />
-              ))}
+              {items!.map((t) => {
+                const Row = (
+                  <>
+                    <div
+                      className={`w-2 h-2 rounded-full shrink-0 ${statusDots[status] ?? "bg-gray-400"}`}
+                    />
+                    <span className="text-blue-400 font-mono text-xs font-semibold shrink-0">
+                      {t.id}
+                    </span>
+                    <span className="text-white/80 text-sm truncate group-hover:text-blue-300 transition-colors">
+                      {t.title}
+                    </span>
+                    <div
+                      className={`w-2 h-2 rounded-full shrink-0 ml-auto ${priorityDots[t.priority] ?? "bg-gray-400"}`}
+                      title={`${t.priority} priority`}
+                    />
+                  </>
+                );
+                return t.url ? (
+                  <a
+                    key={t.id}
+                    href={t.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.03] rounded-xl transition-colors group"
+                  >
+                    {Row}
+                  </a>
+                ) : (
+                  <div
+                    key={t.id}
+                    className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
+                  >
+                    {Row}
+                  </div>
+                );
+              })}
             </div>
           </div>
-        )}
-
-        {toDoCount > 0 && (
-          <div>
-            <h4 className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2 px-4">
-              To Do
-            </h4>
-            <div className="space-y-0.5">
-              {toDo!.map((t) => (
-                <TicketRow key={t.ticketId} ticket={t} />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {inReviewCount > 0 && (
-          <div>
-            <h4 className="text-amber-400 text-xs font-semibold uppercase tracking-wider mb-2 px-4">
-              In Review
-            </h4>
-            <div className="space-y-0.5">
-              {inReview!.map((t) => (
-                <TicketRow key={t.ticketId} ticket={t} />
-              ))}
-            </div>
-          </div>
-        )}
+        ))}
 
         {totalActiveTickets === 0 && (
           <div className="text-center py-8">

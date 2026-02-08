@@ -101,229 +101,197 @@ import { pmPersonaHelper } from "@/lib/pm-context";
 import type { TamboComponent } from "@tambo-ai/react";
 import { TamboTool } from "@tambo-ai/react";
 
-/**
- * Context helpers — functions that run automatically before each message
- * to provide the AI with relevant app state.
- */
 export const contextHelpers = {
   uploadedFeedback: uploadedFeedbackHelper,
   pmPersona: pmPersonaHelper,
 };
 
-/**
- * Tools the AI can invoke to fetch data or perform actions.
- */
 export const tools: TamboTool[] = [
   {
     name: "analyzeFeedback",
-    description:
-      "Analyzes raw customer feedback text to extract key themes, sentiment, and trends. Returns a summary and a list of themes. Use this when the user uploads or pastes customer feedback and wants to understand patterns.",
+    description: "Analyze customer feedback to extract themes and sentiment.",
     tool: analyzeFeedback,
     inputSchema: analyzeFeedbackSchema,
     outputSchema: analyzeFeedbackOutputSchema,
   },
   {
     name: "createJiraTicket",
-    description:
-      "Creates a Jira ticket for a product feature. Pre-fills title, description, type, priority, and labels. Use this when a user asks to create a Jira ticket, file an issue, or track a feature in their project management tool.",
+    description: "Create a Jira ticket. Use when user asks to file an issue or create a ticket.",
     tool: createJiraTicket,
     inputSchema: createJiraTicketSchema,
     outputSchema: createJiraTicketOutputSchema,
   },
   {
     name: "postToSlack",
-    description:
-      "Posts a formatted message to a Slack channel to share feature decisions, updates, or analysis results with the team. Use this when a user asks to share something to Slack, notify the team, or post an update.",
+    description: "Post a message to a Slack channel.",
     tool: postToSlack,
     inputSchema: postToSlackSchema,
     outputSchema: postToSlackOutputSchema,
   },
   {
     name: "searchJiraTickets",
-    description:
-      "Searches Jira tickets with optional filters for status, type, and assignee. Use this when the user asks to see tickets, check what's in progress, view the backlog, list open tasks, or check ticket status.",
+    description: "Search Jira tickets by status, type, or assignee.",
     tool: searchJiraTickets,
     inputSchema: searchJiraTicketsSchema,
     outputSchema: searchJiraTicketsOutputSchema,
   },
   {
     name: "assignJiraTicket",
-    description:
-      "Assigns a Jira ticket to a team member by their email address. Use this when the user asks to assign a ticket, delegate a task, or set an owner for an issue.",
+    description: "Assign a Jira ticket to a team member.",
     tool: assignJiraTicket,
     inputSchema: assignJiraTicketSchema,
     outputSchema: assignJiraTicketOutputSchema,
   },
   {
     name: "updateJiraTicket",
-    description:
-      "Updates a Jira ticket's fields — change status (To Do, In Progress, In Review, Done), priority, summary, or labels. Use this when the user asks to update a ticket, move a ticket to in progress, change priority, or modify a Jira issue.",
+    description: "Update a Jira ticket's status, priority, summary, or labels.",
     tool: updateJiraTicket,
     inputSchema: updateJiraTicketSchema,
     outputSchema: updateJiraTicketOutputSchema,
   },
   {
     name: "checkDeveloperAvailability",
-    description:
-      "Checks if a developer/team member is available for new tasks by looking at their current Jira assignments. Shows in-progress, to-do, and in-review tickets. Use this when a user asks if someone is free, available, has bandwidth, or can take on a new task.",
+    description: "Check if a developer is available by looking at their Jira tickets. Use when user asks if someone is free or available.",
     tool: checkDeveloperAvailability,
     inputSchema: checkDeveloperAvailabilitySchema,
     outputSchema: checkDeveloperAvailabilityOutputSchema,
   },
   {
     name: "createCalendarEvent",
-    description:
-      "Creates a Google Calendar event with title, time, attendees, and location. Use this when the user asks to schedule a meeting, book a review, set up a sprint planning session, or create any calendar event.",
+    description: "Create a Google Calendar event with title, time, and attendees.",
     tool: createCalendarEvent,
     inputSchema: createCalendarEventSchema,
     outputSchema: createCalendarEventOutputSchema,
   },
   {
     name: "listCalendarEvents",
-    description:
-      "Lists upcoming Google Calendar events for the next N days. Use this when the user asks to see their schedule, check upcoming meetings, view the calendar, or asks 'what's on my calendar?'.",
+    description: "List upcoming calendar events for the next N days.",
     tool: listCalendarEvents,
     inputSchema: listCalendarEventsSchema,
     outputSchema: listCalendarEventsOutputSchema,
   },
   {
     name: "checkAvailability",
-    description:
-      "Checks calendar availability for a given time range and returns busy slots. Use this when the user asks to find a free time, check availability, or wants to know when they're available for a meeting.",
+    description: "Check calendar availability for a time range.",
     tool: checkAvailability,
     inputSchema: checkAvailabilitySchema,
     outputSchema: checkAvailabilityOutputSchema,
   },
 ];
 
-/**
- * Components the AI can dynamically render in response to user messages.
- */
 export const components: TamboComponent[] = [
   {
     name: "Graph",
-    description:
-      "A component that renders various types of charts (bar, line, pie) using Recharts. Supports customizable data visualization with labels, datasets, and styling options.",
+    description: "Render bar, line, or pie charts with Recharts.",
     component: Graph,
     propsSchema: graphSchema,
   },
   {
     name: "DataCard",
-    description:
-      "A component that displays options as clickable cards with links and summaries with the ability to select multiple items.",
+    description: "Clickable option cards for multi-select.",
     component: DataCard,
     propsSchema: dataCardSchema,
   },
   {
     name: "ThemeCard",
-    description:
-      "Displays a customer feedback theme with the number of mentions, overall sentiment (positive/negative/neutral), and trend direction (up/down/stable). Use this to show patterns and themes discovered from analyzing customer feedback, support tickets, or user interviews.",
+    description: "Customer feedback theme with mentions, sentiment, and trend.",
     component: ThemeCard,
     propsSchema: themeCardSchema,
   },
   {
     name: "FeatureCard",
-    description:
-      "Displays a prioritized product feature with priority score (1-100), status (recommended/quick-win/consider), business impact (High/Medium/Low), development effort (High/Medium/Low), and customer mention count. Use this to show feature recommendations, roadmap priorities, or backlog items ranked by value and feasibility.",
+    description: "Prioritized feature with score, impact, effort, and status.",
     component: FeatureCard,
     propsSchema: featureCardSchema,
   },
   {
     name: "FeatureDetail",
-    description:
-      "Displays a comprehensive feature analysis with a tabbed interface: Overview (metrics, user stories, acceptance criteria), Evidence (customer quotes and supporting data), and Specification (technical considerations, dependencies, timeline). Use this when a user asks to drill into a feature, see feature details, wants a comprehensive feature breakdown, or clicks on a feature card.",
+    description: "Tabbed feature breakdown: Overview, Evidence, Specification.",
     component: FeatureDetail,
     propsSchema: featureDetailSchema,
   },
   {
     name: "PriorityBoard",
-    description:
-      "Displays a ranked board of prioritized features with summary statistics (total count, average priority, quick wins). Use this when a user asks 'what should we build?', wants to see all features ranked, needs a priority overview, or asks for feature recommendations.",
+    description: "Ranked board of features with priority stats. Use for 'what should we build?'.",
     component: PriorityBoard,
     propsSchema: priorityBoardSchema,
   },
   {
     name: "PRDDocument",
-    description:
-      "Generates a professional Product Requirements Document with sections for overview, goals, user stories, acceptance criteria, technical specification, timeline, risks, and success metrics. Includes a download button to export as Markdown. Use this when a user asks to generate a PRD, export requirements, or create a spec document for a feature.",
+    description: "Full PRD with goals, user stories, specs, timeline, and export.",
     component: PRDDocument,
     propsSchema: prdDocumentSchema,
   },
   {
     name: "JiraTicketPreview",
-    description:
-      "Displays a Jira ticket that was just created or updated, showing the ticket ID, title, description, type, priority, status, labels, and a link to open in Jira. Use this after a Jira ticket has been created, assigned, or updated to show the result to the user.",
+    description: "Show a Jira ticket after creation or update.",
     component: JiraTicketPreview,
     propsSchema: jiraTicketPreviewSchema,
   },
   {
     name: "JiraTicketList",
-    description:
-      "Displays a list of Jira tickets with their status, priority, type, and assignee. Each ticket links to Jira. Use this after searching for tickets to show the results, e.g. when the user asks 'show me in-progress tickets' or 'what's in the backlog'.",
+    description: "List of Jira tickets with status, priority, and assignee.",
     component: JiraTicketList,
     propsSchema: jiraTicketListSchema,
   },
   {
     name: "SlackMessagePreview",
-    description:
-      "Displays a preview of a Slack message that was posted, showing the channel, bot avatar, formatted message, and delivery status. Use this after posting a message to Slack to confirm it was sent.",
+    description: "Preview of a posted Slack message with delivery status.",
     component: SlackMessagePreview,
     propsSchema: slackMessagePreviewSchema,
   },
   {
     name: "TaskBreakdown",
-    description:
-      "Displays a sprint plan or feature breakdown as a list of dev tasks with story points, type (frontend/backend/design/qa), status, and assignee. Shows total points and progress. Use this when a user asks to plan a sprint, break down a feature into tasks, estimate story points, or create a task list for development.",
+    description: "Sprint task list with story points, type, status, and assignee.",
     component: TaskBreakdown,
     propsSchema: taskBreakdownSchema,
   },
   {
     name: "CompetitorMatrix",
-    description:
-      "Displays a competitive analysis matrix comparing features across multiple competitors with full/partial/none/unknown support indicators and key insights. Use this when a user asks to compare products, do competitive analysis, benchmark features, or evaluate alternatives.",
+    description: "Competitive analysis matrix comparing features across products.",
     component: CompetitorMatrix,
     propsSchema: competitorMatrixSchema,
   },
   {
     name: "StatusReport",
-    description:
-      "Displays a stakeholder status report with overall status (on-track/at-risk/off-track), highlights, risks, next steps, and key metrics with trends. Use this when a user asks for a status update, exec summary, weekly report, or project health check.",
+    description: "Project status report with health, risks, metrics, and next steps.",
     component: StatusReport,
     propsSchema: statusReportSchema,
   },
   {
     name: "RoadmapTimeline",
-    description:
-      "Displays a product roadmap as a vertical timeline with phases, date ranges, status indicators, and milestone items. Use this when a user asks to plan a roadmap, lay out quarterly milestones, visualize project phases, or create a release plan.",
+    description: "Vertical timeline with phases, milestones, and date ranges.",
     component: RoadmapTimeline,
     propsSchema: roadmapTimelineSchema,
   },
   {
     name: "MetricsDashboard",
-    description:
-      "Displays a grid of KPI metric cards with big numbers, trend arrows, percentage changes, and target progress bars. Use this when a user asks about KPIs, success metrics, tracking numbers, performance dashboards, or wants to define measurable goals.",
+    description: "KPI cards with trends, targets, and progress bars.",
     component: MetricsDashboard,
     propsSchema: metricsDashboardSchema,
   },
   {
     name: "MeetingNotes",
-    description:
-      "Displays structured meeting notes with attendees, summary, decisions, and action items with owners and due dates. Use this when a user asks to summarize a meeting, capture action items, document decisions, or write meeting minutes.",
+    description: "Meeting summary with attendees, decisions, and action items.",
     component: MeetingNotes,
     propsSchema: meetingNotesSchema,
   },
   {
     name: "CalendarEventPreview",
-    description:
-      "Displays a Google Calendar event that was just created, showing the title, date/time, duration, attendees, location, and a link to open in Google Calendar. Use this after creating a calendar event to confirm it to the user.",
+    description: "Show a calendar event after creation.",
     component: CalendarEventPreview,
     propsSchema: calendarEventPreviewSchema,
   },
   {
     name: "CalendarEventList",
-    description:
-      "Displays a list of upcoming Google Calendar events grouped by day, showing time, duration, title, location, and attendee count. Use this when showing the user their schedule or upcoming meetings.",
+    description: "Upcoming calendar events grouped by day.",
     component: CalendarEventList,
     propsSchema: calendarEventListSchema,
+  },
+  {
+    name: "DeveloperAvailability",
+    description: "Developer availability and ticket workload. Use after checkDeveloperAvailability.",
+    component: DeveloperAvailability,
+    propsSchema: developerAvailabilitySchema,
   },
 ];
