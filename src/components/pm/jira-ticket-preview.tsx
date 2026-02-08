@@ -81,35 +81,53 @@ export function JiraTicketPreview(props: JiraTicketPreviewProps) {
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saved" | "error">("idle");
 
-  // Editable fields
-  const [editTitle, setEditTitle] = useState(title ?? "");
-  const [editDescription, setEditDescription] = useState(description ?? "");
-  const [editPriority, setEditPriority] = useState(priority ?? "Medium");
-  const [editStatus, setEditStatus] = useState(status ?? "To Do");
-  const [editType, setEditType] = useState(type ?? "Story");
+  // "Current" values — starts from props, overwritten by successful saves
+  const [current, setCurrent] = useState({
+    title: title ?? "",
+    description: description ?? "",
+    priority: priority ?? "Medium",
+    status: status ?? "To Do",
+    type: type ?? "Story",
+    acceptanceCriteria: acceptanceCriteria ?? "",
+  });
+
+  // Editable fields (draft while editing)
+  const [editTitle, setEditTitle] = useState(current.title);
+  const [editDescription, setEditDescription] = useState(current.description);
+  const [editPriority, setEditPriority] = useState(current.priority);
+  const [editStatus, setEditStatus] = useState(current.status);
+  const [editType, setEditType] = useState(current.type);
   const [editAcceptanceCriteria, setEditAcceptanceCriteria] = useState(
-    acceptanceCriteria ?? ""
+    current.acceptanceCriteria
   );
 
-  // Sync when props change (e.g. AI updates)
+  // Sync ONLY when props from AI actually change (not on editing toggle)
   useEffect(() => {
-    if (!editing) {
-      setEditTitle(title ?? "");
-      setEditDescription(description ?? "");
-      setEditPriority(priority ?? "Medium");
-      setEditStatus(status ?? "To Do");
-      setEditType(type ?? "Story");
-      setEditAcceptanceCriteria(acceptanceCriteria ?? "");
-    }
-  }, [title, description, priority, status, type, acceptanceCriteria, editing]);
+    const next = {
+      title: title ?? "",
+      description: description ?? "",
+      priority: priority ?? "Medium",
+      status: status ?? "To Do",
+      type: type ?? "Story",
+      acceptanceCriteria: acceptanceCriteria ?? "",
+    };
+    setCurrent(next);
+    setEditTitle(next.title);
+    setEditDescription(next.description);
+    setEditPriority(next.priority);
+    setEditStatus(next.status);
+    setEditType(next.type);
+    setEditAcceptanceCriteria(next.acceptanceCriteria);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title, description, priority, status, type, acceptanceCriteria]);
 
   const hasChanges =
-    editTitle !== (title ?? "") ||
-    editDescription !== (description ?? "") ||
-    editPriority !== (priority ?? "Medium") ||
-    editStatus !== (status ?? "To Do") ||
-    editType !== (type ?? "Story") ||
-    editAcceptanceCriteria !== (acceptanceCriteria ?? "");
+    editTitle !== current.title ||
+    editDescription !== current.description ||
+    editPriority !== current.priority ||
+    editStatus !== current.status ||
+    editType !== current.type ||
+    editAcceptanceCriteria !== current.acceptanceCriteria;
 
   const handleSave = async () => {
     setSaving(true);
@@ -119,15 +137,25 @@ export function JiraTicketPreview(props: JiraTicketPreviewProps) {
         ticketId,
         action: "update",
       };
-      if (editTitle !== (title ?? "")) body.summary = editTitle;
-      if (editPriority !== (priority ?? "Medium")) body.priority = editPriority;
-      if (editStatus !== (status ?? "To Do")) body.status = editStatus;
-      if (editDescription !== (description ?? "")) body.description = editDescription;
+      if (editTitle !== current.title) body.summary = editTitle;
+      if (editPriority !== current.priority) body.priority = editPriority;
+      if (editStatus !== current.status) body.status = editStatus;
+      if (editDescription !== current.description) body.description = editDescription;
 
       await fetch("/api/jira", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
+      });
+
+      // Persist edits as the new "current" values shown in view mode
+      setCurrent({
+        title: editTitle,
+        description: editDescription,
+        priority: editPriority,
+        status: editStatus,
+        type: editType,
+        acceptanceCriteria: editAcceptanceCriteria,
       });
 
       setSaveStatus("saved");
@@ -142,12 +170,12 @@ export function JiraTicketPreview(props: JiraTicketPreviewProps) {
 
   const handleCancel = () => {
     setEditing(false);
-    setEditTitle(title ?? "");
-    setEditDescription(description ?? "");
-    setEditPriority(priority ?? "Medium");
-    setEditStatus(status ?? "To Do");
-    setEditType(type ?? "Story");
-    setEditAcceptanceCriteria(acceptanceCriteria ?? "");
+    setEditTitle(current.title);
+    setEditDescription(current.description);
+    setEditPriority(current.priority);
+    setEditStatus(current.status);
+    setEditType(current.type);
+    setEditAcceptanceCriteria(current.acceptanceCriteria);
   };
 
   const inputBase =
@@ -284,25 +312,25 @@ export function JiraTicketPreview(props: JiraTicketPreviewProps) {
             </>
           ) : (
             <>
-              {type && (
+              {current.type && (
                 <span
-                  className={`px-3 py-1 rounded-lg border text-xs font-semibold ${typeColors[type] ?? "bg-gray-500/20 text-gray-300 border-gray-500/30"}`}
+                  className={`px-3 py-1 rounded-lg border text-xs font-semibold ${typeColors[current.type] ?? "bg-gray-500/20 text-gray-300 border-gray-500/30"}`}
                 >
-                  {type}
+                  {current.type}
                 </span>
               )}
-              {priority && (
+              {current.priority && (
                 <span
-                  className={`text-sm font-medium ${priorityColors[priority] ?? "text-gray-400"}`}
+                  className={`text-sm font-medium ${priorityColors[current.priority] ?? "text-gray-400"}`}
                 >
-                  {priority} Priority
+                  {current.priority} Priority
                 </span>
               )}
-              {status && (
+              {current.status && (
                 <span
-                  className={`ml-auto px-3 py-1 rounded-lg border text-xs font-semibold ${statusColors[status] ?? "bg-slate-700/50 text-gray-300 border-slate-600/50"}`}
+                  className={`ml-auto px-3 py-1 rounded-lg border text-xs font-semibold ${statusColors[current.status] ?? "bg-slate-700/50 text-gray-300 border-slate-600/50"}`}
                 >
-                  {status}
+                  {current.status}
                 </span>
               )}
             </>
@@ -319,7 +347,7 @@ export function JiraTicketPreview(props: JiraTicketPreviewProps) {
           />
         ) : (
           <h3 className="text-white text-xl font-bold">
-            {title ?? "Loading..."}
+            {current.title || "Loading..."}
           </h3>
         )}
 
@@ -333,9 +361,9 @@ export function JiraTicketPreview(props: JiraTicketPreviewProps) {
             placeholder="Ticket description..."
           />
         ) : (
-          description && (
+          current.description && (
             <p className="text-gray-400 text-sm leading-relaxed line-clamp-4">
-              {description}
+              {current.description}
             </p>
           )
         )}
@@ -355,13 +383,13 @@ export function JiraTicketPreview(props: JiraTicketPreviewProps) {
             />
           </div>
         ) : (
-          acceptanceCriteria && (
+          current.acceptanceCriteria && (
             <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4">
               <h4 className="text-gray-300 text-xs font-semibold uppercase tracking-wider mb-2">
                 Acceptance Criteria
               </h4>
               <p className="text-gray-400 text-sm leading-relaxed whitespace-pre-line">
-                {acceptanceCriteria}
+                {current.acceptanceCriteria}
               </p>
             </div>
           )
