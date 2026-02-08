@@ -22,5 +22,15 @@ export async function POST(req: NextRequest) {
 
   const response = NextResponse.json({ disconnected: service });
   clearTokenCookieOnResponse(response, cookieName);
+
+  // Set a "disabled" flag so env var fallbacks are skipped
+  response.cookies.set(`${service}_disabled`, "1", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+  });
+
   return response;
 }

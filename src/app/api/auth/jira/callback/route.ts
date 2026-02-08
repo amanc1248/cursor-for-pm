@@ -27,36 +27,32 @@ export async function GET(req: NextRequest) {
     });
 
     const tokenData = await tokenResp.json();
-    console.log("[jira/callback] token exchange status:", tokenResp.status, "has access_token:", !!tokenData.access_token);
 
     if (tokenData.error || !tokenData.access_token) {
       console.error("[jira/callback] token error:", tokenData);
-      return NextResponse.redirect(
-        `${APP_URL}/settings?error=jira_token_failed`
-      );
+      return NextResponse.redirect(`${APP_URL}/settings?error=jira_token_failed`);
     }
 
     // Get accessible resources (cloudId + site name)
     const resourcesResp = await fetch(
       "https://api.atlassian.com/oauth/token/accessible-resources",
-      {
-        headers: { Authorization: `Bearer ${tokenData.access_token}` },
-      }
+      { headers: { Authorization: `Bearer ${tokenData.access_token}` } }
     );
     const resources = await resourcesResp.json();
-    console.log("[jira/callback] resources count:", resources.length);
 
     if (!resources.length) {
-      return NextResponse.redirect(
-        `${APP_URL}/settings?error=no_jira_sites`
-      );
+      return NextResponse.redirect(`${APP_URL}/settings?error=no_jira_sites`);
     }
 
     const site = resources[0];
+    const redirectUrl = `${APP_URL}/settings?connected=jira`;
 
-    const response = NextResponse.redirect(
-      `${APP_URL}/settings?connected=jira`
-    );
+    // Use HTML response so Set-Cookie is reliably sent (not dropped on 302)
+    const html = `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${redirectUrl}"><script>window.location.href="${redirectUrl}";</script></head><body>Redirecting...</body></html>`;
+    const response = new NextResponse(html, {
+      status: 200,
+      headers: { "Content-Type": "text/html" },
+    });
 
     setTokenCookieOnResponse(response, "jira_tokens", {
       accessToken: tokenData.access_token,
@@ -66,12 +62,12 @@ export async function GET(req: NextRequest) {
       expiresAt: Date.now() + tokenData.expires_in * 1000,
     });
 
-    console.log("[jira/callback] cookie set, redirecting to settings");
+    // Clear disabled flag if it was set
+    response.cookies.set("jira_disabled", "", { path: "/", maxAge: 0 });
+
     return response;
   } catch (err) {
-    console.error("[jira/callback] unexpected error:", err);
-    return NextResponse.redirect(
-      `${APP_URL}/settings?error=jira_callback_error`
-    );
+    console.error("[jira/callback] error:", err);
+    return NextResponse.redirect(`${APP_URL}/settings?error=jira_callback_error`);
   }
 }

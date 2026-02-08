@@ -1,4 +1,4 @@
-import { getTokenCookie, setTokenCookieOnResponse } from "./cookies";
+import { getTokenCookie, setTokenCookieOnResponse, isServiceDisabled } from "./cookies";
 import { NextResponse } from "next/server";
 
 // ─── Jira ──────────────────────────────────────────────────
@@ -55,6 +55,9 @@ async function refreshJiraToken(
 }
 
 export async function getJiraCredentials(): Promise<JiraCredentials> {
+  // Check if user explicitly disconnected
+  if (await isServiceDisabled("jira")) return { connected: false, mode: "none" };
+
   // 1. Try cookie (OAuth)
   const tokens = await getTokenCookie<JiraOAuthTokens>("jira_tokens");
   if (tokens) {
@@ -148,6 +151,8 @@ export interface SlackCredentials {
 }
 
 export async function getSlackCredentials(): Promise<SlackCredentials> {
+  if (await isServiceDisabled("slack")) return { connected: false };
+
   // 1. Try cookie
   const tokens = await getTokenCookie<SlackOAuthTokens>("slack_tokens");
   if (tokens) {
@@ -185,6 +190,8 @@ export interface GoogleCredentials {
 }
 
 export async function getGoogleCredentials(): Promise<GoogleCredentials> {
+  if (await isServiceDisabled("google")) return { connected: false };
+
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
@@ -223,6 +230,8 @@ export interface GitHubCredentials {
 }
 
 export async function getGitHubCredentials(): Promise<GitHubCredentials> {
+  if (await isServiceDisabled("github")) return { connected: false };
+
   // 1. Try cookie (OAuth)
   const tokens = await getTokenCookie<GitHubOAuthTokens>("github_tokens");
   if (tokens) {

@@ -12,7 +12,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "No code provided" }, { status: 400 });
   }
 
-  // Exchange code for access token
   const tokenResp = await fetch("https://github.com/login/oauth/access_token", {
     method: "POST",
     headers: {
@@ -30,12 +29,9 @@ export async function GET(req: NextRequest) {
 
   if (tokenData.error) {
     console.error("GitHub OAuth token error:", tokenData);
-    return NextResponse.redirect(
-      `${APP_URL}/settings?error=github_auth_failed`
-    );
+    return NextResponse.redirect(`${APP_URL}/settings?error=github_auth_failed`);
   }
 
-  // Get user info
   const userResp = await fetch("https://api.github.com/user", {
     headers: {
       Authorization: `Bearer ${tokenData.access_token}`,
@@ -44,14 +40,19 @@ export async function GET(req: NextRequest) {
   });
   const user = await userResp.json();
 
-  const response = NextResponse.redirect(
-    `${APP_URL}/settings?connected=github`
-  );
+  const redirectUrl = `${APP_URL}/settings?connected=github`;
+  const html = `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${redirectUrl}"><script>window.location.href="${redirectUrl}";</script></head><body>Redirecting...</body></html>`;
+  const response = new NextResponse(html, {
+    status: 200,
+    headers: { "Content-Type": "text/html" },
+  });
 
   setTokenCookieOnResponse(response, "github_tokens", {
     accessToken: tokenData.access_token,
     username: user.login,
   });
+
+  response.cookies.set("github_disabled", "", { path: "/", maxAge: 0 });
 
   return response;
 }

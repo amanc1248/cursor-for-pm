@@ -28,12 +28,9 @@ export async function GET(req: NextRequest) {
 
   if (data.error) {
     console.error("Google OAuth error:", data);
-    return NextResponse.redirect(
-      `${APP_URL}/settings?error=google_auth_failed`
-    );
+    return NextResponse.redirect(`${APP_URL}/settings?error=google_auth_failed`);
   }
 
-  // Get user email from userinfo
   let email: string | undefined;
   if (data.access_token) {
     try {
@@ -48,14 +45,19 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const response = NextResponse.redirect(
-    `${APP_URL}/settings?connected=google`
-  );
+  const redirectUrl = `${APP_URL}/settings?connected=google`;
+  const html = `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${redirectUrl}"><script>window.location.href="${redirectUrl}";</script></head><body>Redirecting...</body></html>`;
+  const response = new NextResponse(html, {
+    status: 200,
+    headers: { "Content-Type": "text/html" },
+  });
 
   setTokenCookieOnResponse(response, "google_tokens", {
     refreshToken: data.refresh_token,
     email: email ?? undefined,
   });
+
+  response.cookies.set("google_disabled", "", { path: "/", maxAge: 0 });
 
   return response;
 }

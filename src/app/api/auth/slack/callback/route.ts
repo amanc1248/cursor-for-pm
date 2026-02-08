@@ -27,20 +27,23 @@ export async function GET(req: NextRequest) {
 
   if (!data.ok) {
     console.error("Slack OAuth error:", data.error);
-    return NextResponse.redirect(
-      `${APP_URL}/settings?error=slack_auth_failed`
-    );
+    return NextResponse.redirect(`${APP_URL}/settings?error=slack_auth_failed`);
   }
 
-  const response = NextResponse.redirect(
-    `${APP_URL}/settings?connected=slack`
-  );
+  const redirectUrl = `${APP_URL}/settings?connected=slack`;
+  const html = `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${redirectUrl}"><script>window.location.href="${redirectUrl}";</script></head><body>Redirecting...</body></html>`;
+  const response = new NextResponse(html, {
+    status: 200,
+    headers: { "Content-Type": "text/html" },
+  });
 
   setTokenCookieOnResponse(response, "slack_tokens", {
     botToken: data.access_token,
     teamName: data.team?.name ?? "Workspace",
     teamId: data.team?.id ?? "",
   });
+
+  response.cookies.set("slack_disabled", "", { path: "/", maxAge: 0 });
 
   return response;
 }

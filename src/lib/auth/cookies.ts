@@ -30,6 +30,15 @@ export function setTokenCookieOnResponse(
   });
 }
 
+export async function isServiceDisabled(service: string): Promise<boolean> {
+  try {
+    const cookieStore = await cookies();
+    return !!cookieStore.get(`${service}_disabled`)?.value;
+  } catch {
+    return false;
+  }
+}
+
 export function clearTokenCookieOnResponse(
   response: NextResponse,
   name: ServiceName
