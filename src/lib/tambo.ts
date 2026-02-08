@@ -92,6 +92,10 @@ import {
   CalendarEventList,
   calendarEventListSchema,
 } from "@/components/pm/calendar-event-list";
+import {
+  DeveloperAvailability,
+  developerAvailabilitySchema,
+} from "@/components/pm/developer-availability";
 import { uploadedFeedbackHelper } from "@/lib/feedback-store";
 import { pmPersonaHelper } from "@/lib/pm-context";
 import type { TamboComponent } from "@tambo-ai/react";
