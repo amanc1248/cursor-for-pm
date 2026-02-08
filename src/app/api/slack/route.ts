@@ -1,22 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-
-const SLACK_BOT_TOKEN = process.env.SLACK_BOT_TOKEN!;
-const SLACK_CHANNEL_ID = process.env.SLACK_CHANNEL_ID!;
+import { getSlackCredentials } from "@/lib/auth/tokens";
 
 export async function POST(req: NextRequest) {
   try {
+    const creds = await getSlackCredentials();
+    if (!creds.connected || !creds.botToken) {
+      return NextResponse.json(
+        { error: "Slack not connected. Go to Settings to connect your Slack workspace." },
+        { status: 401 }
+      );
+    }
+
     const body = await req.json();
     const { channel, message } = body;
 
     // Use the provided channel or fall back to the default
     const targetChannel = channel?.startsWith("C")
       ? channel
-      : SLACK_CHANNEL_ID;
+      : creds.channelId ?? channel;
 
     const response = await fetch("https://slack.com/api/chat.postMessage", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${SLACK_BOT_TOKEN}`,
+        Authorization: `Bearer ${creds.botToken}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
