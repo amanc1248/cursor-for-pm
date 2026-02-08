@@ -23,7 +23,7 @@ export default function ChatPage() {
               </div>
               <div>
                 <h1 className="text-white font-semibold text-[15px] tracking-[-0.01em]">
-                  Product Assistant
+                  PMcrush
                 </h1>
                 <p className="text-white/40 text-[12px] tracking-wide">
                   Jira &middot; Slack &middot; Calendar &middot; GitHub

@@ -4,8 +4,8 @@ import { Providers } from "@/components/providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "PM Assistant",
-  description: "AI-powered product management assistant with Jira, Slack, and Calendar integrations",
+  title: "PMcrush",
+  description: "Connect Jira, Slack, Calendar & GitHub. Upload feedback. Let AI handle the rest.",
 };
 
 const inter = Inter({

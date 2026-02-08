@@ -73,8 +73,8 @@ export function CanvasView() {
               Ready when you are
             </h3>
             <p className="text-white/30 text-[13px] leading-relaxed mb-8">
-              Ask me to analyze feedback, prioritize features, create Jira
-              tickets, or schedule meetings.
+              Upload feedback, create Jira tickets, draft PRDs, plan
+              sprints, or check code impact — all from the chat.
             </p>
 
             <div className="space-y-2">

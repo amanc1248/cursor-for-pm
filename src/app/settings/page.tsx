@@ -200,7 +200,7 @@ function SettingsContent() {
             Integrations
           </h1>
           <p className="text-white/40 text-[14px] leading-relaxed">
-            Connect your tools to let the PM Assistant work with your accounts.
+            Connect your tools to let PMcrush work with your accounts.
             Your credentials are encrypted and stored securely.
           </p>
         </div>

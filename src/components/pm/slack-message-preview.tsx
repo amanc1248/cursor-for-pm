@@ -71,7 +71,7 @@ export function SlackMessagePreview({
             {/* Bot Name + Time */}
             <div className="flex items-center gap-2 mb-1">
               <span className="text-white font-bold text-sm">
-                PM Assistant
+                PMcrush
               </span>
               <span className="bg-slate-700/50 text-gray-400 px-1.5 py-0.5 rounded text-[10px] font-medium">
                 APP

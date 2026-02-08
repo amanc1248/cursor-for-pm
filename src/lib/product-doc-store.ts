@@ -3,7 +3,7 @@
  * Persisted in localStorage so it survives page refreshes.
  */
 
-const STORAGE_KEY = "pm-assistant-product-doc";
+const STORAGE_KEY = "pmcrush-product-doc";
 
 let cached: string | null = null;
 

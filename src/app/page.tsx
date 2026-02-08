@@ -10,7 +10,7 @@ export default function LandingPage() {
             <span className="text-white font-bold text-xs">PM</span>
           </div>
           <span className="text-white font-semibold text-[15px] tracking-[-0.01em]">
-            PM Assistant
+            PMcrush
           </span>
         </div>
         <Link
@@ -35,12 +35,13 @@ export default function LandingPage() {
         </div>
 
         <h1 className="text-4xl sm:text-5xl font-bold tracking-[-0.03em] text-center mb-5 bg-gradient-to-b from-white to-white/60 bg-clip-text text-transparent">
-          Your AI Product Manager
+          Connect. Upload. Crush it.
         </h1>
 
         <p className="text-white/40 text-[16px] leading-relaxed text-center max-w-lg mb-10">
-          Analyze feedback, prioritize features, create Jira tickets, draft
-          PRDs, and run standups &mdash; all from a single conversation.
+          Connect your Jira, Slack, Calendar &amp; GitHub. Upload customer
+          feedback. PMcrush turns it all into PRDs, tickets, roadmaps, and
+          action &mdash; in one conversation.
         </p>
 
         {/* CTA */}
@@ -51,7 +52,7 @@ export default function LandingPage() {
           Get Started
         </Link>
 
-        {/* Feature pills */}
+        {/* Integration pills */}
         <div className="flex items-center gap-3 mt-12 flex-wrap justify-center">
           {[
             { label: "Jira", color: "text-blue-400 bg-blue-500/10 border-blue-500/20" },
@@ -68,7 +69,7 @@ export default function LandingPage() {
           ))}
         </div>
 
-        {/* Capabilities grid */}
+        {/* What you can do */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-10 max-w-2xl">
           {[
             "Feedback Analysis",
@@ -78,7 +79,7 @@ export default function LandingPage() {
             "Competitive Analysis",
             "Status Reports",
             "Meeting Notes",
-            "Roadmap Planning",
+            "Code Impact Analysis",
           ].map((cap) => (
             <div
               key={cap}
