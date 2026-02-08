@@ -73,10 +73,11 @@ function ConnectionPrompt({ service }: { service: string }) {
 
 function detectDisconnectedService(text: string): string | null {
   const lower = text.toLowerCase();
-  if (lower.includes("jira") && (lower.includes("not connected") || lower.includes("connect your jira"))) return "Jira";
-  if (lower.includes("slack") && (lower.includes("not connected") || lower.includes("connect your slack"))) return "Slack";
-  if ((lower.includes("calendar") || lower.includes("google")) && (lower.includes("not connected") || lower.includes("connect your google"))) return "Google Calendar";
-  if (lower.includes("github") && (lower.includes("not connected") || lower.includes("connect your github"))) return "GitHub";
+  // Only match explicit "not connected" responses, not the welcome message
+  if (lower.includes("jira") && lower.includes("not connected")) return "Jira";
+  if (lower.includes("slack") && lower.includes("not connected")) return "Slack";
+  if ((lower.includes("calendar") || lower.includes("google")) && lower.includes("not connected")) return "Google Calendar";
+  if (lower.includes("github") && lower.includes("not connected")) return "GitHub";
   return null;
 }
 

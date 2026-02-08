@@ -10,7 +10,7 @@ const initialMessages: InitialTamboThreadMessage[] = [
     content: [
       {
         type: "text",
-        text: "Hi! I'm PMcrush. Connect your Jira, Slack, Calendar & GitHub, upload customer feedback, and I'll handle the rest — PRDs, tickets, roadmaps, sprint planning, and more. What are you working on?",
+        text: "Hi! I'm PMcrush. Hook up Jira, Slack, Calendar & GitHub in Settings, upload customer feedback, and I'll handle the rest — PRDs, tickets, roadmaps, sprint planning, and more. What are you working on?",
       },
     ],
   },
