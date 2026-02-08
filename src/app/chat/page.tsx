@@ -26,7 +26,7 @@ export default function ChatPage() {
                   Product Assistant
                 </h1>
                 <p className="text-white/40 text-[12px] tracking-wide">
-                  Jira &middot; Slack &middot; Calendar
+                  Jira &middot; Slack &middot; Calendar &middot; GitHub
                 </p>
               </div>
             </div>

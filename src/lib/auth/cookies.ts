@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { encrypt, decrypt } from "./crypto";
 import { NextResponse } from "next/server";
 
-export type ServiceName = "jira_tokens" | "slack_tokens" | "google_tokens";
+export type ServiceName = "jira_tokens" | "slack_tokens" | "google_tokens" | "github_tokens";
 
 export async function getTokenCookie<T>(name: ServiceName): Promise<T | null> {
   try {

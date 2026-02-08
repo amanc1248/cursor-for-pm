@@ -209,6 +209,39 @@ export async function getGoogleCredentials(): Promise<GoogleCredentials> {
   return { connected: false };
 }
 
+// ─── GitHub ───────────────────────────────────────────────
+
+export interface GitHubOAuthTokens {
+  accessToken: string;
+  username: string;
+}
+
+export interface GitHubCredentials {
+  connected: boolean;
+  accessToken?: string;
+  username?: string;
+}
+
+export async function getGitHubCredentials(): Promise<GitHubCredentials> {
+  // 1. Try cookie (OAuth)
+  const tokens = await getTokenCookie<GitHubOAuthTokens>("github_tokens");
+  if (tokens) {
+    return {
+      connected: true,
+      accessToken: tokens.accessToken,
+      username: tokens.username,
+    };
+  }
+
+  // 2. Fall back to env var
+  const pat = process.env.GITHUB_TOKEN;
+  if (pat) {
+    return { connected: true, accessToken: pat };
+  }
+
+  return { connected: false };
+}
+
 // ─── Helper: save refreshed Jira tokens to response ───────
 
 export async function saveRefreshedJiraTokens(

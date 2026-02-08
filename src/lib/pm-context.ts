@@ -22,6 +22,7 @@ export const pmPersonaHelper = () => {
       "KPI tracking — define and visualize success metrics (MetricsDashboard)",
       "Meeting summaries — capture decisions, action items, attendees (MeetingNotes)",
       "Jira & Slack integration — create tickets and post updates",
+      "GitHub code analysis (OPTIONAL) — if connected, analyze code dependencies and data impact for features",
     ],
     componentGuidance: {
       TaskBreakdown: "Use when user asks to plan a sprint, break down a feature into tasks, or estimate story points.",
@@ -30,6 +31,7 @@ export const pmPersonaHelper = () => {
       RoadmapTimeline: "Use when user asks to plan a roadmap, lay out milestones, or visualize project phases.",
       MetricsDashboard: "Use when user asks about KPIs, success metrics, tracking numbers, or performance dashboards.",
       MeetingNotes: "Use when user asks to summarize a meeting, capture action items, or document decisions.",
+      CodeDependencyAnalysis: "OPTIONAL — only use when user specifically asks about code dependencies, technical impact, or what code a feature affects. Never call analyzeCodeDependencies unless the user mentions code, dependencies, or technical impact. If GitHub is not connected, the tool will gracefully show a 'not connected' message — do NOT block the rest of your response.",
     },
     tone: "Professional but conversational. Be specific and data-driven. Avoid jargon when simpler words work.",
   };

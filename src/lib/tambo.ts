@@ -96,14 +96,25 @@ import {
   DeveloperAvailability,
   developerAvailabilitySchema,
 } from "@/components/pm/developer-availability";
+import {
+  CodeDependencyAnalysis,
+  codeDependencyAnalysisSchema,
+} from "@/components/pm/code-dependency-analysis";
+import {
+  analyzeCodeDependencies,
+  analyzeCodeDependenciesSchema,
+  analyzeCodeDependenciesOutputSchema,
+} from "@/services/github";
 import { uploadedFeedbackHelper } from "@/lib/feedback-store";
 import { pmPersonaHelper } from "@/lib/pm-context";
+import { productDocHelper } from "@/lib/product-doc-store";
 import type { TamboComponent } from "@tambo-ai/react";
 import { TamboTool } from "@tambo-ai/react";
 
 export const contextHelpers = {
   uploadedFeedback: uploadedFeedbackHelper,
   pmPersona: pmPersonaHelper,
+  productDoc: productDocHelper,
 };
 
 export const tools: TamboTool[] = [
@@ -176,6 +187,13 @@ export const tools: TamboTool[] = [
     tool: checkAvailability,
     inputSchema: checkAvailabilitySchema,
     outputSchema: checkAvailabilityOutputSchema,
+  },
+  {
+    name: "analyzeCodeDependencies",
+    description: "Search GitHub repo to find code dependencies and affected data for a feature.",
+    tool: analyzeCodeDependencies,
+    inputSchema: analyzeCodeDependenciesSchema,
+    outputSchema: analyzeCodeDependenciesOutputSchema,
   },
 ];
 
@@ -293,5 +311,11 @@ export const components: TamboComponent[] = [
     description: "Developer availability and ticket workload. Use after checkDeveloperAvailability.",
     component: DeveloperAvailability,
     propsSchema: developerAvailabilitySchema,
+  },
+  {
+    name: "CodeDependencyAnalysis",
+    description: "Code dependency analysis results. Use after analyzeCodeDependencies.",
+    component: CodeDependencyAnalysis,
+    propsSchema: codeDependencyAnalysisSchema,
   },
 ];

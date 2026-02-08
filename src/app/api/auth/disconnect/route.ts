@@ -5,6 +5,7 @@ const serviceMap: Record<string, ServiceName> = {
   jira: "jira_tokens",
   slack: "slack_tokens",
   google: "google_tokens",
+  github: "github_tokens",
 };
 
 export async function POST(req: NextRequest) {
@@ -14,7 +15,7 @@ export async function POST(req: NextRequest) {
   const cookieName = serviceMap[service];
   if (!cookieName) {
     return NextResponse.json(
-      { error: "Invalid service. Use: jira, slack, or google" },
+      { error: "Invalid service. Use: jira, slack, google, or github" },
       { status: 400 }
     );
   }

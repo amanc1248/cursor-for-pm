@@ -57,6 +57,7 @@ export default function LandingPage() {
             { label: "Jira", color: "text-blue-400 bg-blue-500/10 border-blue-500/20" },
             { label: "Slack", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
             { label: "Google Calendar", color: "text-orange-400 bg-orange-500/10 border-orange-500/20" },
+            { label: "GitHub", color: "text-gray-300 bg-gray-500/10 border-gray-500/20" },
           ].map((item) => (
             <span
               key={item.label}

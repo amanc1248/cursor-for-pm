@@ -63,6 +63,7 @@ function detectDisconnectedService(text: string): string | null {
   if (lower.includes("jira") && (lower.includes("not connected") || lower.includes("connect your jira"))) return "Jira";
   if (lower.includes("slack") && (lower.includes("not connected") || lower.includes("connect your slack"))) return "Slack";
   if ((lower.includes("calendar") || lower.includes("google")) && (lower.includes("not connected") || lower.includes("connect your google"))) return "Google Calendar";
+  if (lower.includes("github") && (lower.includes("not connected") || lower.includes("connect your github"))) return "GitHub";
   return null;
 }
 
