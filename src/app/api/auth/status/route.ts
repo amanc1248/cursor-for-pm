@@ -6,21 +6,29 @@ import {
   getGitHubCredentials,
 } from "@/lib/auth/tokens";
 
-const safe = async <T>(fn: () => Promise<T>, fallback: T): Promise<T> => {
+const safe = async <T>(label: string, fn: () => Promise<T>, fallback: T): Promise<T> => {
   try {
     return await fn();
-  } catch {
+  } catch (err) {
+    console.error(`[auth/status] ${label} error:`, err);
     return fallback;
   }
 };
 
 export async function GET() {
   const [jira, slack, google, github] = await Promise.all([
-    safe(getJiraCredentials, { connected: false, mode: "none" as const }),
-    safe(getSlackCredentials, { connected: false }),
-    safe(getGoogleCredentials, { connected: false }),
-    safe(getGitHubCredentials, { connected: false }),
+    safe("jira", getJiraCredentials, { connected: false, mode: "none" as const }),
+    safe("slack", getSlackCredentials, { connected: false }),
+    safe("google", getGoogleCredentials, { connected: false }),
+    safe("github", getGitHubCredentials, { connected: false }),
   ]);
+
+  console.log("[auth/status] results:", {
+    jira: jira.connected,
+    slack: slack.connected,
+    google: google.connected,
+    github: github.connected,
+  });
 
   return NextResponse.json({
     jira: {
